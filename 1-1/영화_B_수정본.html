@@ -1,0 +1,1239 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>My Movie Archive</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap');
+
+    :root {
+      --paper: #f7f5ef;
+      --surface: #fffefa;
+      --ink: #1f211d;
+      --muted: #74786e;
+      --line: #deddd5;
+      --line-dark: #c8c7be;
+      --accent: #275d47;
+      --accent-soft: #e4eee8;
+      --shadow: 0 18px 55px rgba(37, 41, 34, .09);
+      --s: #e56f64;
+      --a: #ef9a58;
+      --b: #e9bd50;
+      --c: #82b76a;
+      --d: #6da5bc;
+      --f: #8e83af;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-width: 980px;
+      background:
+        radial-gradient(circle at 6% 0%, rgba(231, 190, 95, .14), transparent 27rem),
+        var(--paper);
+      color: var(--ink);
+      font-family: "DM Sans", "Noto Sans KR", sans-serif;
+      letter-spacing: -.02em;
+    }
+    button, input, textarea { font: inherit; }
+    button { color: inherit; }
+    [hidden] { display: none !important; }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 82px;
+      padding: 0 44px;
+      background: rgba(247, 245, 239, .9);
+      border-bottom: 1px solid rgba(200, 199, 190, .72);
+      backdrop-filter: blur(16px);
+    }
+    .brand { display: flex; align-items: center; gap: 14px; }
+    .brand-mark {
+      position: relative;
+      width: 34px;
+      height: 34px;
+      border: 2px solid var(--ink);
+      border-radius: 50%;
+    }
+    .brand-mark::before,
+    .brand-mark::after {
+      content: "";
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      border: 1.5px solid var(--ink);
+      border-radius: 50%;
+      background: var(--paper);
+    }
+    .brand-mark::before { left: 6px; top: 6px; box-shadow: 14px 0 0 -1px var(--paper), 14px 0 0 0 var(--ink), 0 14px 0 -1px var(--paper), 0 14px 0 0 var(--ink); }
+    .brand-mark::after { right: 6px; bottom: 6px; }
+    .brand-title { font-size: 17px; font-weight: 800; letter-spacing: .07em; }
+    .brand-title span { color: var(--accent); }
+
+    .header-actions { display: flex; align-items: center; gap: 10px; }
+    .user-chip {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-right: 10px;
+      padding: 7px 11px 7px 7px;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      cursor: pointer;
+    }
+    .user-chip:hover { background: #ebe9e1; }
+    .avatar {
+      display: grid;
+      width: 32px;
+      height: 32px;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+    }
+    .user-name { max-width: 145px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }
+    .edit-icon { color: var(--muted); font-size: 13px; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 40px;
+      padding: 0 16px;
+      border: 1px solid var(--line-dark);
+      border-radius: 10px;
+      background: var(--surface);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform .15s ease, background .15s ease, border-color .15s ease;
+    }
+    .btn:hover { border-color: #9d9f95; background: #fff; transform: translateY(-1px); }
+    .btn:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px solid rgba(39, 93, 71, .2); outline-offset: 2px; }
+    .btn-primary { border-color: var(--accent); background: var(--accent); color: #fff; }
+    .btn-primary:hover { border-color: #1d4836; background: #1d4836; }
+    .btn-quiet { border-color: transparent; background: transparent; }
+    .btn-danger { border-color: #d99a93; color: #a83d34; background: #fff8f7; }
+    .icon { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
+
+    main { width: calc(100% - 88px); max-width: 1540px; margin: 0 auto; padding: 56px 0 38px; }
+    .intro { display: flex; align-items: end; justify-content: space-between; margin-bottom: 31px; }
+    .eyebrow { margin: 0 0 10px; color: var(--accent); font-size: 12px; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
+    h1 { margin: 0; font-size: clamp(35px, 3vw, 50px); line-height: 1.08; letter-spacing: -.055em; }
+    .intro-copy { margin: 13px 0 0; color: var(--muted); font-size: 15px; }
+    .stats { display: flex; gap: 30px; padding-bottom: 5px; }
+    .stat { text-align: right; }
+    .stat strong { display: block; font-size: 25px; line-height: 1; }
+    .stat span { display: block; margin-top: 6px; color: var(--muted); font-size: 12px; }
+
+    .search-panel {
+      margin-bottom: 32px;
+      padding: 21px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--surface);
+      box-shadow: 0 5px 22px rgba(43, 46, 39, .035);
+    }
+    .search-row { display: flex; gap: 10px; }
+    .search-box { position: relative; flex: 1; }
+    .search-box svg { position: absolute; left: 16px; top: 50%; width: 19px; transform: translateY(-50%); color: #777b71; }
+    .search-input {
+      width: 100%;
+      height: 48px;
+      padding: 0 18px 0 47px;
+      border: 1px solid var(--line-dark);
+      border-radius: 11px;
+      background: #fbfaf6;
+      color: var(--ink);
+      font-size: 15px;
+    }
+    .search-input::placeholder { color: #a0a299; }
+    .search-row .btn { min-height: 48px; }
+    .search-hint { display: flex; align-items: center; gap: 7px; margin: 13px 2px 0; color: var(--muted); font-size: 12px; }
+    .search-hint.warning { color: #8b5a22; }
+    .search-hint svg { width: 15px; flex: none; }
+    .inline-link {
+      padding: 0;
+      border: 0;
+      border-bottom: 1px solid currentColor;
+      background: none;
+      color: inherit;
+      font-size: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .search-results {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 11px;
+      margin-top: 18px;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+    }
+    .result-card { display: flex; align-items: center; min-width: 0; gap: 11px; padding: 9px; border-radius: 10px; background: #f4f2eb; }
+    .result-poster { width: 42px; height: 60px; flex: none; object-fit: cover; border-radius: 6px; background: #ddd; }
+    .result-placeholder { display: grid; place-items: center; color: #8b8e84; font-size: 9px; text-align: center; }
+    .result-info { min-width: 0; flex: 1; }
+    .result-title { overflow: hidden; margin-bottom: 4px; font-size: 13px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+    .result-year { color: var(--muted); font-size: 11px; }
+    .result-add { width: 30px; height: 30px; flex: none; border: 1px solid var(--line-dark); border-radius: 8px; background: var(--surface); cursor: pointer; font-size: 20px; line-height: 1; }
+    .result-add:hover { border-color: var(--accent); color: var(--accent); }
+    .result-add:disabled { opacity: .45; cursor: default; }
+    .loading { grid-column: 1 / -1; padding: 10px; color: var(--muted); text-align: center; }
+
+    .board-header { display: flex; align-items: center; justify-content: space-between; margin: 0 2px 13px; }
+    .board-header h2 { margin: 0; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; }
+    .drag-guide { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 12px; }
+    .drag-guide svg { width: 15px; }
+    .tier-board { overflow: hidden; border: 1px solid var(--line-dark); border-radius: 17px; background: var(--surface); box-shadow: var(--shadow); }
+    .tier-row { display: grid; grid-template-columns: 94px 1fr; min-height: 174px; border-bottom: 1px solid var(--line); }
+    .tier-row:last-child { border-bottom: 0; }
+    .tier-label { position: relative; display: grid; place-items: center; overflow: hidden; border-right: 1px solid rgba(31, 33, 29, .11); }
+    .tier-label::after { content: ""; position: absolute; inset: 0; background: linear-gradient(150deg, rgba(255,255,255,.22), transparent 60%); }
+    .tier-label span { position: relative; z-index: 1; font-size: 34px; font-weight: 800; }
+    .tier-s .tier-label { background: var(--s); }
+    .tier-a .tier-label { background: var(--a); }
+    .tier-b .tier-label { background: var(--b); }
+    .tier-c .tier-label { background: var(--c); }
+    .tier-d .tier-label { background: var(--d); }
+    .tier-f .tier-label { background: var(--f); color: #fff; }
+    .dropzone {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+      min-height: 173px;
+      gap: 12px;
+      overflow-x: auto;
+      padding: 14px 17px;
+      scrollbar-width: thin;
+      scrollbar-color: #cac9c1 transparent;
+      transition: background .15s ease, box-shadow .15s ease;
+    }
+    .dropzone.drag-over { background: #f0f5f1; box-shadow: inset 0 0 0 2px var(--accent); }
+    .empty-row { width: 100%; color: #a2a49b; font-size: 13px; text-align: center; pointer-events: none; }
+
+    .movie-card {
+      position: relative;
+      width: 98px;
+      height: 145px;
+      flex: 0 0 98px;
+      overflow: hidden;
+      border: 0;
+      border-radius: 9px;
+      background: #e4e2db;
+      box-shadow: 0 4px 13px rgba(26, 28, 24, .13);
+      cursor: grab;
+      transition: transform .16s ease, box-shadow .16s ease, opacity .16s ease;
+    }
+    .movie-card:hover { transform: translateY(-4px); box-shadow: 0 10px 22px rgba(26, 28, 24, .2); }
+    .movie-card:focus-visible { outline: 3px solid rgba(39, 93, 71, .35); outline-offset: 3px; }
+    .movie-card.dragging { opacity: .35; transform: scale(.96); }
+    .movie-card img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+    .manual-card { display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-end; padding: 13px; color: #fff; text-align: left; background: linear-gradient(150deg, #587867, #234b39); }
+    .manual-card::before { content: "MY\A MOVIE"; white-space: pre; position: absolute; top: 12px; right: 10px; color: rgba(255,255,255,.18); font-size: 22px; font-weight: 800; line-height: .9; text-align: right; }
+    .manual-title { position: relative; z-index: 1; display: -webkit-box; overflow: hidden; font-size: 13px; font-weight: 700; line-height: 1.35; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+    .manual-year { position: relative; z-index: 1; margin-top: 5px; color: rgba(255,255,255,.67); font-size: 10px; }
+    .rating-badge { position: absolute; right: 6px; top: 6px; z-index: 2; padding: 3px 6px; border-radius: 999px; background: rgba(26, 28, 24, .78); color: #fff; font-size: 10px; font-weight: 700; backdrop-filter: blur(4px); }
+
+    .unranked-section { margin-top: 23px; }
+    .unranked-box { display: grid; grid-template-columns: 160px 1fr; min-height: 174px; overflow: hidden; border: 1px dashed #b8b8ae; border-radius: 17px; background: rgba(255, 254, 250, .6); }
+    .unranked-label { display: flex; flex-direction: column; justify-content: center; padding: 24px; border-right: 1px dashed #c6c5bc; }
+    .unranked-label strong { font-size: 16px; }
+    .unranked-label span { margin-top: 6px; color: var(--muted); font-size: 11px; line-height: 1.45; }
+
+    footer { display: flex; justify-content: space-between; align-items: center; padding: 26px 2px 4px; color: var(--muted); font-size: 11px; }
+    .tmdb { display: flex; align-items: center; gap: 9px; }
+    .tmdb-logo { color: #1aa0c7; font-size: 15px; font-weight: 800; letter-spacing: .08em; }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: grid;
+      place-items: center;
+      padding: 28px;
+      background: rgba(28, 31, 26, .42);
+      backdrop-filter: blur(5px);
+    }
+    .modal { width: min(520px, 100%); max-height: calc(100vh - 56px); overflow: auto; border: 1px solid rgba(255,255,255,.4); border-radius: 20px; background: var(--surface); box-shadow: 0 28px 80px rgba(25, 27, 23, .28); }
+    .modal-small { width: min(430px, 100%); }
+    .modal-wide { width: min(780px, 100%); }
+    .modal-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 25px 26px 0; }
+    .modal-title { margin: 0; font-size: 23px; line-height: 1.2; }
+    .modal-subtitle { margin: 7px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+    .close-btn { display: grid; width: 34px; height: 34px; place-items: center; border: 0; border-radius: 50%; background: #efede7; cursor: pointer; font-size: 20px; }
+    .modal-body { padding: 23px 26px 26px; }
+    .form-group { margin-bottom: 18px; }
+    .form-group:last-child { margin-bottom: 0; }
+    .form-label { display: block; margin: 0 0 8px; font-size: 12px; font-weight: 700; }
+    .field { width: 100%; height: 45px; padding: 0 13px; border: 1px solid var(--line-dark); border-radius: 9px; background: #fbfaf6; }
+    textarea.field { height: 90px; padding-top: 12px; resize: vertical; line-height: 1.5; }
+    .form-row { display: grid; grid-template-columns: 1fr 130px; gap: 10px; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 23px; }
+
+    .detail-layout { display: grid; grid-template-columns: 150px 1fr; gap: 25px; }
+    .detail-poster { width: 150px; aspect-ratio: 2 / 3; overflow: hidden; border-radius: 12px; background: #e2e1da; box-shadow: 0 9px 23px rgba(32,35,29,.14); }
+    .detail-poster img { width: 100%; height: 100%; object-fit: cover; }
+    .detail-placeholder { display: flex; height: 100%; align-items: flex-end; padding: 16px; color: #fff; background: linear-gradient(145deg, #668372, #274e3d); font-weight: 700; line-height: 1.35; }
+    .detail-meta h3 { margin: 3px 0 6px; font-size: 24px; line-height: 1.25; }
+    .detail-year { color: var(--muted); font-size: 13px; }
+    .rating-wrap { margin-top: 22px; }
+    .rating-line { display: flex; align-items: center; gap: 10px; }
+    .range { flex: 1; accent-color: var(--accent); }
+    .rating-value { width: 64px; color: var(--accent); font-size: 13px; font-weight: 700; text-align: right; }
+    .clear-rating { padding: 0; border: 0; background: none; color: var(--muted); font-size: 11px; text-decoration: underline; cursor: pointer; }
+    .tier-picker { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 8px; }
+    .tier-option { height: 34px; border: 1px solid var(--line); border-radius: 8px; background: #f5f3ed; font-size: 11px; font-weight: 700; cursor: pointer; }
+    .tier-option.active { border-color: var(--accent); background: var(--accent); color: #fff; }
+    .detail-footer { display: flex; justify-content: space-between; gap: 9px; margin-top: 23px; padding-top: 20px; border-top: 1px solid var(--line); }
+
+    .credential-field { position: relative; }
+    .credential-field .field { padding-right: 76px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; letter-spacing: 0; }
+    .credential-toggle { position: absolute; right: 7px; top: 6px; height: 33px; padding: 0 10px; border: 0; border-radius: 7px; background: #eceae3; color: var(--muted); font-size: 11px; font-weight: 700; cursor: pointer; }
+    .credential-status { min-height: 20px; margin: 8px 1px 0; color: var(--muted); font-size: 12px; }
+    .credential-status.success { color: var(--accent); }
+    .credential-status.error { color: #a3473e; }
+    .guide-box { margin-top: 19px; padding: 18px; border: 1px solid var(--line); border-radius: 13px; background: #f5f3ed; }
+    .guide-box h3 { margin: 0 0 12px; font-size: 14px; }
+    .guide-steps { margin: 0; padding-left: 20px; color: #51554d; font-size: 13px; line-height: 1.75; }
+    .guide-steps strong { color: var(--ink); }
+    .guide-link { color: var(--accent); font-weight: 700; text-underline-offset: 3px; }
+    .security-note { display: flex; gap: 10px; margin-top: 13px; padding: 12px 14px; border-radius: 10px; background: #fff4df; color: #795425; font-size: 12px; line-height: 1.55; }
+    .security-note strong { display: block; color: #664416; }
+    .api-state { display: inline-flex; align-items: center; gap: 7px; }
+    .api-dot { width: 7px; height: 7px; border-radius: 50%; background: #c27a3c; }
+    .api-state.connected .api-dot { background: #4b9b6b; box-shadow: 0 0 0 3px rgba(75, 155, 107, .14); }
+
+    .docs-intro { margin: 0 0 19px; padding: 16px 18px; border-radius: 12px; background: var(--accent-soft); color: #315642; font-size: 13px; line-height: 1.65; }
+    .docs-section { border-top: 1px solid var(--line); }
+    .docs-section:last-of-type { border-bottom: 1px solid var(--line); }
+    .docs-section summary { display: flex; align-items: center; gap: 12px; padding: 17px 2px; font-size: 14px; font-weight: 800; cursor: pointer; list-style: none; }
+    .docs-section summary::-webkit-details-marker { display: none; }
+    .docs-section summary::after { content: "+"; margin-left: auto; color: var(--muted); font-size: 20px; font-weight: 400; }
+    .docs-section[open] summary::after { content: "−"; }
+    .docs-number { display: grid; width: 26px; height: 26px; place-items: center; border-radius: 8px; background: #eceae3; color: var(--accent); font-size: 11px; }
+    .docs-content { padding: 0 6px 19px 40px; color: #575b53; font-size: 13px; line-height: 1.75; }
+    .docs-content p { margin: 0 0 10px; }
+    .docs-content ul, .docs-content ol { margin: 7px 0 0; padding-left: 20px; }
+    .docs-content code { padding: 2px 5px; border-radius: 4px; background: #efede7; color: #3f5046; font-size: 12px; }
+    .docs-callout { margin-top: 12px; padding: 12px 14px; border-left: 3px solid var(--accent); background: #f2f5f1; }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 28px;
+      z-index: 200;
+      max-width: 520px;
+      padding: 13px 18px;
+      border-radius: 999px;
+      background: #22251f;
+      color: #fff;
+      box-shadow: 0 10px 35px rgba(0,0,0,.2);
+      font-size: 13px;
+      transform: translate(-50%, 18px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s ease, transform .2s ease;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .toast.error { background: #983d35; }
+
+    @media (max-width: 1150px) {
+      .search-results { grid-template-columns: repeat(3, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand" aria-label="My Movie Archive">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <div class="brand-title">MY MOVIE <span>ARCHIVE</span></div>
+    </div>
+    <div class="header-actions">
+      <button class="user-chip" id="editNicknameBtn" type="button" title="닉네임 수정">
+        <span class="avatar" id="avatarLetter">M</span>
+        <span class="user-name" id="nicknameDisplay">Movie Lover</span>
+        <span class="edit-icon">수정</span>
+      </button>
+      <button class="btn" id="openCredentialBtn" type="button">
+        <span class="api-state" id="apiState"><span class="api-dot"></span><span id="apiStateText">TMDB 설정</span></span>
+      </button>
+      <button class="btn" id="openDocsBtn" type="button">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4Z"/><path d="M8 20a3 3 0 0 1 3-3h8M9 8h6m-6 4h6"/></svg>
+        사용법
+      </button>
+      <button class="btn" id="exportBtn" type="button">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 16v4h14v-4"/></svg>
+        내보내기
+      </button>
+      <button class="btn" id="importBtn" type="button">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M12 15V3m0 0 4 4m-4-4L8 7M5 14v6h14v-6"/></svg>
+        불러오기
+      </button>
+      <input id="importFile" type="file" accept=".md,text/markdown,text/plain" hidden>
+    </div>
+  </header>
+
+  <main>
+    <section class="intro" aria-labelledby="pageTitle">
+      <div>
+        <p class="eyebrow">Personal film collection</p>
+        <h1 id="pageTitle">영화를 기억하는<br>나만의 방식.</h1>
+        <p class="intro-copy">본 영화를 추가하고, 마음에 남은 순서대로 정리해 보세요.</p>
+      </div>
+      <div class="stats" aria-label="영화 통계">
+        <div class="stat"><strong id="movieCount">0</strong><span>전체 영화</span></div>
+        <div class="stat"><strong id="ratedCount">0</strong><span>평가한 영화</span></div>
+      </div>
+    </section>
+
+    <section class="search-panel" aria-label="영화 검색 및 추가">
+      <div class="search-row">
+        <div class="search-box">
+          <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg>
+          <input class="search-input" id="searchInput" type="search" placeholder="영화 제목을 검색하세요 (예: 기생충)" autocomplete="off">
+        </div>
+        <button class="btn btn-primary" id="searchBtn" type="button">영화 검색</button>
+        <button class="btn" id="manualAddBtn" type="button">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+          직접 추가
+        </button>
+      </div>
+      <p class="search-hint warning" id="searchHint">
+        <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v5m0 3h.01"/></svg>
+        TMDB 인증값이 없습니다. 지금은 직접 추가를 사용할 수 있습니다.
+        <button class="inline-link" type="button" data-open-credential>인증값 입력하기</button>
+      </p>
+      <div class="search-results" id="searchResults" hidden></div>
+    </section>
+
+    <div class="board-header">
+      <h2>Movie tier list</h2>
+      <span class="drag-guide">
+        <svg class="icon" viewBox="0 0 24 24"><path d="m9 5 3-3 3 3M12 2v20m-3-3 3 3 3-3M5 9l-3 3 3 3M2 12h20m-3-3 3 3-3 3"/></svg>
+        포스터를 드래그해 이동하거나 순서를 바꿀 수 있어요
+      </span>
+    </div>
+
+    <section class="tier-board" id="tierBoard" aria-label="영화 티어 보드"></section>
+
+    <section class="unranked-section" aria-labelledby="unrankedTitle">
+      <div class="board-header"><h2 id="unrankedTitle">Unranked</h2></div>
+      <div class="unranked-box">
+        <div class="unranked-label">
+          <strong>미분류</strong>
+          <span>새로 추가한 영화가<br>여기에 모입니다.</span>
+        </div>
+        <div class="dropzone" id="zone-unranked" data-tier="unranked"></div>
+      </div>
+    </section>
+
+    <footer>
+      <span>브라우저에 자동 저장됩니다 · 마지막 저장 <span id="savedTime">—</span></span>
+      <div class="tmdb"><span>영화 정보 제공</span><strong class="tmdb-logo">TMDB</strong><span>· This product uses the TMDB API but is not endorsed or certified by TMDB.</span></div>
+    </footer>
+  </main>
+
+  <div class="modal-backdrop" id="nicknameModal" hidden>
+    <div class="modal modal-small" role="dialog" aria-modal="true" aria-labelledby="nicknameTitle">
+      <div class="modal-header">
+        <div><h2 class="modal-title" id="nicknameTitle">나만의 아카이브</h2><p class="modal-subtitle">상단에 표시할 닉네임을 정해주세요.</p></div>
+        <button class="close-btn nickname-close" type="button" aria-label="닫기">×</button>
+      </div>
+      <form class="modal-body" id="nicknameForm">
+        <div class="form-group">
+          <label class="form-label" for="nicknameInput">닉네임</label>
+          <input class="field" id="nicknameInput" maxlength="20" placeholder="예: 필름 수집가" required>
+        </div>
+        <div class="modal-actions"><button class="btn btn-primary" type="submit">저장하고 시작하기</button></div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="credentialModal" hidden>
+    <div class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="credentialTitle">
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow">TMDB connection</p>
+          <h2 class="modal-title" id="credentialTitle">TMDB 인증값 설정</h2>
+          <p class="modal-subtitle">영화 검색에 사용할 v3 API 키 또는 API Read Access Token을 입력하세요.</p>
+        </div>
+        <button class="close-btn" data-close="credentialModal" type="button" aria-label="닫기">×</button>
+      </div>
+      <form class="modal-body" id="credentialForm">
+        <div class="form-group">
+          <label class="form-label" for="credentialInput">API 키 / 읽기 액세스 토큰</label>
+          <div class="credential-field">
+            <input class="field" id="credentialInput" type="password" autocomplete="off" spellcheck="false" placeholder="TMDB에서 복사한 값을 붙여넣으세요" required>
+            <button class="credential-toggle" id="credentialToggle" type="button">보기</button>
+          </div>
+          <p class="credential-status" id="credentialStatus">입력값은 이 브라우저에만 저장되며 영화 MD 파일에는 포함되지 않습니다.</p>
+        </div>
+
+        <div class="guide-box">
+          <h3>TMDB 인증값 발급 방법</h3>
+          <ol class="guide-steps">
+            <li><a class="guide-link" href="https://www.themoviedb.org/signup" target="_blank" rel="noopener noreferrer">TMDB 회원가입</a> 후 이메일 인증과 로그인을 완료합니다.</li>
+            <li>우측 상단 프로필 → <strong>설정(Settings)</strong> → 왼쪽 메뉴의 <strong>API</strong>를 선택합니다.</li>
+            <li>약관에 동의하고 용도에 맞는 신청 유형을 선택한 뒤 신청 정보를 작성합니다. 개인 기록용이면 비상업적 용도를 선택합니다.</li>
+            <li>발급 화면에서 <strong>API Key(v3 auth)</strong> 또는 <strong>API Read Access Token</strong> 중 하나를 복사해 위 입력칸에 붙여넣습니다.</li>
+          </ol>
+          <div class="security-note">
+            <span>🔒</span>
+            <div><strong>보안 주의</strong>인증값은 비밀번호처럼 다루세요. 이 HTML을 공유하거나 공개 저장소에 올릴 때 코드에 값을 직접 적지 마세요. 공용 PC에서는 사용 후 아래의 ‘저장된 인증값 삭제’를 누르세요.</div>
+          </div>
+        </div>
+
+        <div class="modal-actions" style="justify-content:space-between">
+          <button class="btn btn-danger" id="removeCredentialBtn" type="button">저장된 인증값 삭제</button>
+          <div>
+            <button class="btn" data-close="credentialModal" type="button">나중에</button>
+            <button class="btn btn-primary" id="saveCredentialBtn" type="submit">저장하고 연결 확인</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="docsModal" hidden>
+    <div class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="docsTitle">
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow">User guide</p>
+          <h2 class="modal-title" id="docsTitle">사용설명서</h2>
+          <p class="modal-subtitle">이 영화 티어리스트의 모든 기능과 저장 방식을 안내합니다.</p>
+        </div>
+        <button class="close-btn" data-close="docsModal" type="button" aria-label="닫기">×</button>
+      </div>
+      <div class="modal-body">
+        <p class="docs-intro">이 페이지는 설치 없이 HTML 파일 하나로 실행됩니다. 영화 기록은 현재 브라우저에 자동 저장되며, 다른 컴퓨터로 옮길 때는 MD 파일을 이용합니다.</p>
+
+        <details class="docs-section" open>
+          <summary><span class="docs-number">01</span>처음 시작하기</summary>
+          <div class="docs-content">
+            <ol>
+              <li>처음 열면 닉네임을 입력합니다. 닉네임은 상단 프로필 버튼에서 언제든 바꿀 수 있습니다.</li>
+              <li>TMDB 검색을 사용하려면 상단의 <strong>TMDB 설정</strong>에서 인증값을 저장합니다.</li>
+              <li>인증값 없이도 <strong>직접 추가</strong>로 제목과 개봉 연도를 입력해 사용할 수 있습니다.</li>
+            </ol>
+          </div>
+        </details>
+
+        <details class="docs-section">
+          <summary><span class="docs-number">02</span>TMDB 인증값 발급 및 입력</summary>
+          <div class="docs-content">
+            <p>TMDB 계정 가입 → 이메일 인증 → 프로필의 <strong>설정</strong> → <strong>API</strong> 메뉴 → 약관 동의 및 신청 정보 작성 순서로 발급합니다. 발급 페이지의 <code>API Key(v3 auth)</code> 또는 <code>API Read Access Token</code> 중 하나를 사용할 수 있습니다.</p>
+            <p>상단의 <strong>TMDB 설정</strong>을 누르고 값을 붙여넣은 뒤 <strong>저장하고 연결 확인</strong>을 누르세요. 연결 성공 후 한글 영화 검색과 포스터 불러오기가 활성화됩니다.</p>
+            <div class="docs-callout">TMDB 공식 안내에 따르면 v3 API는 API 키 쿼리 방식과 Bearer 읽기 토큰 방식을 모두 지원합니다. 발급 신청은 PC 브라우저 사용을 권장합니다.</div>
+            <p style="margin-top:12px"><button class="btn btn-primary" type="button" data-open-credential>TMDB 인증값 설정 열기</button></p>
+          </div>
+        </details>
+
+        <details class="docs-section">
+          <summary><span class="docs-number">03</span>영화 추가와 중복 기준</summary>
+          <div class="docs-content">
+            <ul>
+              <li><strong>TMDB 검색:</strong> 영화 제목을 입력하면 한국어 검색 결과를 최대 5개 표시합니다. 결과의 + 버튼을 누르면 미분류 칸에 추가됩니다.</li>
+              <li><strong>직접 추가:</strong> 제목과 개봉 연도를 입력합니다. 포스터 대신 제목 카드가 표시됩니다.</li>
+              <li>TMDB 영화는 같은 TMDB ID, 직접 추가 영화는 같은 제목과 연도를 중복으로 판단합니다.</li>
+            </ul>
+          </div>
+        </details>
+
+        <details class="docs-section">
+          <summary><span class="docs-number">04</span>티어 이동과 영화 기록</summary>
+          <div class="docs-content">
+            <ul>
+              <li>포스터를 S/A/B/C/D/F 또는 미분류 칸으로 드래그해 이동합니다. 같은 칸 안에서도 드래그해 순서를 바꿀 수 있습니다.</li>
+              <li>포스터를 클릭하면 별점(0.5~5점, 0.5 단위), 본 날짜, 한줄평을 기록할 수 있습니다.</li>
+              <li>상세창의 티어 버튼으로도 이동할 수 있으며, 삭제 시 확인창이 표시됩니다.</li>
+              <li>별점·본 날짜·한줄평은 모두 비워 둔 상태로도 저장할 수 있습니다.</li>
+            </ul>
+          </div>
+        </details>
+
+        <details class="docs-section">
+          <summary><span class="docs-number">05</span>자동 저장과 브라우저 데이터</summary>
+          <div class="docs-content">
+            <p>닉네임, 영화 추가·수정·삭제·이동 결과는 작업할 때마다 브라우저의 로컬 저장 공간에 자동 저장됩니다. 새로고침하거나 브라우저를 다시 열어도 같은 브라우저에서는 기록이 유지됩니다.</p>
+            <div class="docs-callout"><strong>주의:</strong> 브라우저의 사이트 데이터·쿠키·저장 데이터를 삭제하거나 시크릿 모드에서 창을 닫으면 기록이 사라질 수 있습니다. 중요한 기록은 정기적으로 내보내세요.</div>
+          </div>
+        </details>
+
+        <details class="docs-section">
+          <summary><span class="docs-number">06</span>MD 내보내기와 불러오기</summary>
+          <div class="docs-content">
+            <ul>
+              <li><strong>내보내기:</strong> 상단의 내보내기를 누르면 <code>movie-tierlist-YYYY-MM-DD.md</code> 파일이 저장됩니다. 티어별 목록과 복원용 데이터가 함께 들어 있습니다.</li>
+              <li><strong>불러오기:</strong> 다른 컴퓨터나 브라우저에서 이 HTML을 열고 불러오기를 눌러 저장한 MD 파일을 선택합니다.</li>
+              <li>불러오기는 현재 영화 기록만 완전히 덮어씁니다. 현재 닉네임과 TMDB 인증 설정은 그대로 유지되며, 확인창에서 동의해야 영화 기록이 교체됩니다.</li>
+              <li>손상되었거나 이 페이지에서 만든 파일이 아니면 기존 데이터를 변경하지 않고 오류만 안내합니다.</li>
+              <li>보안을 위해 TMDB 인증값은 MD 파일에 포함되지 않습니다. 새 컴퓨터에서는 인증값을 다시 입력해야 합니다.</li>
+            </ul>
+          </div>
+        </details>
+
+        <details class="docs-section">
+          <summary><span class="docs-number">07</span>보안과 문제 해결</summary>
+          <div class="docs-content">
+            <ul>
+              <li>인증값은 브라우저에만 저장하지만, 이 장치를 사용하는 사람은 접근할 수 있습니다. 개인 PC에서 사용하세요.</li>
+              <li>HTML 코드에 인증값을 직접 입력한 상태로 파일을 공유하거나 GitHub 등 공개 저장소에 올리지 마세요.</li>
+              <li>검색이 실패하면 TMDB 설정에서 인증값을 다시 저장해 연결을 확인하세요. 인터넷 연결과 TMDB 서비스 상태도 확인하세요.</li>
+              <li>검색을 사용할 수 없어도 직접 추가와 기존 영화 기록 편집은 계속 사용할 수 있습니다.</li>
+            </ul>
+          </div>
+        </details>
+
+        <div class="modal-actions"><button class="btn btn-primary" data-close="docsModal" type="button">설명서 닫기</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="manualModal" hidden>
+    <div class="modal modal-small" role="dialog" aria-modal="true" aria-labelledby="manualTitle">
+      <div class="modal-header">
+        <div><h2 class="modal-title" id="manualTitle">영화 직접 추가</h2><p class="modal-subtitle">검색되지 않는 영화도 기록할 수 있어요.</p></div>
+        <button class="close-btn" data-close="manualModal" type="button" aria-label="닫기">×</button>
+      </div>
+      <form class="modal-body" id="manualForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="manualMovieTitle">영화 제목</label>
+            <input class="field" id="manualMovieTitle" maxlength="100" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="manualMovieYear">개봉 연도</label>
+            <input class="field" id="manualMovieYear" type="number" min="1888" max="2100" placeholder="2026" required>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn" data-close="manualModal" type="button">취소</button>
+          <button class="btn btn-primary" type="submit">미분류에 추가</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="detailModal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+      <div class="modal-header">
+        <div><p class="eyebrow">Movie details</p></div>
+        <button class="close-btn" data-close="detailModal" type="button" aria-label="닫기">×</button>
+      </div>
+      <form class="modal-body" id="detailForm">
+        <div class="detail-layout">
+          <div class="detail-poster" id="detailPoster"></div>
+          <div class="detail-meta">
+            <h3 id="detailTitle"></h3>
+            <div class="detail-year" id="detailYear"></div>
+            <div class="form-group rating-wrap">
+              <label class="form-label" for="ratingInput">별점</label>
+              <div class="rating-line">
+                <input class="range" id="ratingInput" type="range" min="0.5" max="5" step="0.5" value="3">
+                <span class="rating-value" id="ratingValue">평가 안 함</span>
+              </div>
+              <button class="clear-rating" id="clearRatingBtn" type="button">별점 비우기</button>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="watchedDateInput">본 날짜</label>
+              <input class="field" id="watchedDateInput" type="date">
+            </div>
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:21px">
+          <label class="form-label" for="reviewInput">한줄평</label>
+          <textarea class="field" id="reviewInput" maxlength="300" placeholder="영화를 보고 떠오른 생각을 남겨보세요."></textarea>
+        </div>
+        <div class="form-group">
+          <span class="form-label">티어 변경</span>
+          <div class="tier-picker" id="tierPicker"></div>
+        </div>
+        <div class="detail-footer">
+          <button class="btn btn-danger" id="deleteMovieBtn" type="button">영화 삭제</button>
+          <div>
+            <button class="btn" data-close="detailModal" type="button">닫기</button>
+            <button class="btn btn-primary" type="submit">변경사항 저장</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const DEFAULT_TMDB_CREDENTIAL = ""; // 공개 저장소에 올릴 때는 비우세요
+    const STORAGE_KEY = "movie-tierlist-b-v1";
+    const CREDENTIAL_STORAGE_KEY = "movie-tierlist-tmdb-credential-v1";
+    const TIERS = ["S", "A", "B", "C", "D", "F"];
+    const ALL_TIERS = [...TIERS, "unranked"];
+    const POSTER_BASE = "https://image.tmdb.org/t/p/w342";
+
+    let state = loadState();
+    let editingMovieId = null;
+    let pendingTier = "unranked";
+    let ratingIsEmpty = true;
+    let draggedId = null;
+    let didDrag = false;
+    let toastTimer = null;
+
+    function blankState() {
+      return { version: 1, nickname: "", movies: [], updatedAt: null };
+    }
+
+    function loadState() {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        return isValidState(parsed) ? parsed : blankState();
+      } catch (_) {
+        return blankState();
+      }
+    }
+
+    function isValidState(data) {
+      return data && data.version === 1 && typeof data.nickname === "string" && Array.isArray(data.movies) &&
+        data.movies.every(movie => movie && typeof movie.id === "string" && typeof movie.title === "string" && ALL_TIERS.includes(movie.tier));
+    }
+
+    function saveState() {
+      state.updatedAt = new Date().toISOString();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      updateHeader();
+    }
+
+    function updateHeader() {
+      const nickname = state.nickname || "Movie Lover";
+      document.getElementById("nicknameDisplay").textContent = nickname;
+      document.getElementById("avatarLetter").textContent = [...nickname][0]?.toUpperCase() || "M";
+      document.getElementById("movieCount").textContent = state.movies.length;
+      document.getElementById("ratedCount").textContent = state.movies.filter(movie => movie.rating != null).length;
+      document.getElementById("savedTime").textContent = state.updatedAt
+        ? new Date(state.updatedAt).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })
+        : "—";
+    }
+
+    function renderBoard() {
+      const board = document.getElementById("tierBoard");
+      board.innerHTML = TIERS.map(tier => `
+        <div class="tier-row tier-${tier.toLowerCase()}">
+          <div class="tier-label"><span>${tier}</span></div>
+          <div class="dropzone" id="zone-${tier}" data-tier="${tier}"></div>
+        </div>
+      `).join("");
+
+      document.querySelectorAll(".dropzone").forEach(zone => setupDropzone(zone));
+      ALL_TIERS.forEach(tier => renderZone(tier));
+      updateHeader();
+    }
+
+    function renderZone(tier) {
+      const zone = document.getElementById(`zone-${tier}`);
+      if (!zone) return;
+      const movies = state.movies.filter(movie => movie.tier === tier).sort((a, b) => a.order - b.order);
+      zone.innerHTML = movies.length ? "" : `<div class="empty-row">${tier === "unranked" ? "검색하거나 직접 추가한 영화가 이곳에 표시됩니다" : "포스터를 이곳에 놓아주세요"}</div>`;
+      movies.forEach(movie => zone.appendChild(createMovieCard(movie)));
+    }
+
+    function createMovieCard(movie) {
+      const card = document.createElement("button");
+      card.type = "button";
+      card.className = `movie-card${movie.source === "manual" ? " manual-card" : ""}`;
+      card.draggable = true;
+      card.dataset.id = movie.id;
+      card.setAttribute("aria-label", `${movie.title} 상세 보기`);
+      card.title = `${movie.title}${movie.year ? ` (${movie.year})` : ""}`;
+      if (movie.source === "tmdb" && movie.posterPath) {
+        const img = document.createElement("img");
+        img.src = POSTER_BASE + movie.posterPath;
+        img.alt = "";
+        img.loading = "lazy";
+        card.appendChild(img);
+      } else {
+        card.innerHTML = `<span class="manual-title"></span><span class="manual-year"></span>`;
+        card.querySelector(".manual-title").textContent = movie.title;
+        card.querySelector(".manual-year").textContent = movie.year || "연도 미상";
+      }
+      card.addEventListener("click", () => {
+        if (!didDrag) openDetail(movie.id);
+        didDrag = false;
+      });
+      card.addEventListener("dragstart", event => {
+        draggedId = movie.id;
+        didDrag = true;
+        card.classList.add("dragging");
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData("text/plain", movie.id);
+      });
+      card.addEventListener("dragend", () => {
+        card.classList.remove("dragging");
+        document.querySelectorAll(".dropzone").forEach(zone => zone.classList.remove("drag-over"));
+        setTimeout(() => { draggedId = null; didDrag = false; }, 80);
+      });
+      return card;
+    }
+
+    function setupDropzone(zone) {
+      zone.addEventListener("dragover", event => {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "move";
+        zone.classList.add("drag-over");
+      });
+      zone.addEventListener("dragleave", event => {
+        if (!zone.contains(event.relatedTarget)) zone.classList.remove("drag-over");
+      });
+      zone.addEventListener("drop", event => {
+        event.preventDefault();
+        zone.classList.remove("drag-over");
+        const id = draggedId || event.dataTransfer.getData("text/plain");
+        const movie = state.movies.find(item => item.id === id);
+        if (!movie) return;
+        const target = event.target.closest(".movie-card");
+        const targetTier = zone.dataset.tier;
+        const ordered = state.movies.filter(item => item.tier === targetTier && item.id !== id).sort((a, b) => a.order - b.order);
+        let insertAt = ordered.length;
+        if (target && target.dataset.id !== id) {
+          const targetIndex = ordered.findIndex(item => item.id === target.dataset.id);
+          const rect = target.getBoundingClientRect();
+          insertAt = targetIndex + (event.clientX > rect.left + rect.width / 2 ? 1 : 0);
+        }
+        movie.tier = targetTier;
+        ordered.splice(insertAt, 0, movie);
+        ordered.forEach((item, index) => item.order = index);
+        normalizeTierOrders();
+        saveState();
+        renderBoard();
+        showToast(`${movie.title}을(를) ${tierName(targetTier)}로 옮겼습니다.`);
+      });
+    }
+
+    function normalizeTierOrders() {
+      ALL_TIERS.forEach(tier => {
+        state.movies.filter(movie => movie.tier === tier).sort((a, b) => a.order - b.order).forEach((movie, index) => movie.order = index);
+      });
+    }
+
+    function tierName(tier) {
+      return tier === "unranked" ? "미분류" : `${tier} 티어`;
+    }
+
+    function nextOrder(tier) {
+      return state.movies.filter(movie => movie.tier === tier).length;
+    }
+
+    function showModal(id) {
+      const modal = document.getElementById(id);
+      modal.hidden = false;
+      document.body.style.overflow = "hidden";
+      setTimeout(() => modal.querySelector("input:not([type=range]), textarea, button")?.focus(), 0);
+    }
+
+    function hideModal(id) {
+      document.getElementById(id).hidden = true;
+      document.body.style.overflow = "";
+    }
+
+    function showToast(message, type = "") {
+      const toast = document.getElementById("toast");
+      clearTimeout(toastTimer);
+      toast.textContent = message;
+      toast.className = `toast show ${type}`;
+      toastTimer = setTimeout(() => toast.className = "toast", 2600);
+    }
+
+    function getTmdbCredential() {
+      try {
+        return (localStorage.getItem(CREDENTIAL_STORAGE_KEY) || DEFAULT_TMDB_CREDENTIAL).trim();
+      } catch (_) {
+        return DEFAULT_TMDB_CREDENTIAL.trim();
+      }
+    }
+
+    function isBearerCredential(value) {
+      const clean = value.replace(/^Bearer\s+/i, "").trim();
+      return /^Bearer\s+/i.test(value) || clean.startsWith("eyJ") || clean.length > 80;
+    }
+
+    async function tmdbFetch(path, params = {}, credential = getTmdbCredential()) {
+      if (!credential) throw new Error("missing credential");
+      const clean = credential.replace(/^Bearer\s+/i, "").trim();
+      const url = new URL(`https://api.themoviedb.org/3${path}`);
+      Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));
+      const headers = { accept: "application/json" };
+      if (isBearerCredential(credential)) headers.Authorization = `Bearer ${clean}`;
+      else url.searchParams.set("api_key", clean);
+      return fetch(url, { headers });
+    }
+
+    function setCredentialStatus(message, type = "") {
+      const status = document.getElementById("credentialStatus");
+      status.textContent = message;
+      status.className = `credential-status ${type}`;
+    }
+
+    function renderCredentialWarning(message = "TMDB 인증값이 없거나 올바르지 않습니다. 지금은 직접 추가를 사용할 수 있습니다.") {
+      const hint = document.getElementById("searchHint");
+      hint.className = "search-hint warning";
+      hint.innerHTML = `<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v5m0 3h.01"/></svg><span>${message}</span><button class="inline-link" type="button" data-open-credential>인증값 설정</button>`;
+    }
+
+    function updateCredentialUI() {
+      const hasCredential = Boolean(getTmdbCredential());
+      document.getElementById("apiState").classList.toggle("connected", hasCredential);
+      document.getElementById("apiStateText").textContent = hasCredential ? "TMDB 저장됨" : "TMDB 설정";
+      if (hasCredential) {
+        const hint = document.getElementById("searchHint");
+        hint.className = "search-hint";
+        hint.innerHTML = `<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-8h.01"/></svg> TMDB 영화 검색을 사용할 수 있습니다. 검색 결과는 최대 5개까지 표시됩니다.`;
+      } else {
+        renderCredentialWarning("TMDB 인증값이 없습니다. 지금은 직접 추가를 사용할 수 있습니다.");
+      }
+    }
+
+    function openCredentialModal() {
+      const credential = getTmdbCredential();
+      const input = document.getElementById("credentialInput");
+      input.type = "password";
+      input.value = credential;
+      document.getElementById("credentialToggle").textContent = "보기";
+      setCredentialStatus(credential
+        ? "저장된 인증값이 있습니다. 새 값을 입력하면 교체됩니다."
+        : "입력값은 이 브라우저에만 저장되며 영화 MD 파일에는 포함되지 않습니다.");
+      showModal("credentialModal");
+    }
+
+    async function searchMovies() {
+      const query = document.getElementById("searchInput").value.trim();
+      if (!query) return showToast("검색할 영화 제목을 입력해주세요.", "error");
+      if (!getTmdbCredential()) {
+        openCredentialModal();
+        return showToast("TMDB 인증값을 먼저 입력해주세요.", "error");
+      }
+
+      const results = document.getElementById("searchResults");
+      const hint = document.getElementById("searchHint");
+      results.hidden = false;
+      results.innerHTML = '<div class="loading">영화를 찾고 있습니다…</div>';
+      try {
+        const response = await tmdbFetch("/search/movie", { language: "ko-KR", query, include_adult: "false" });
+        if (!response.ok) throw new Error("TMDB request failed");
+        const data = await response.json();
+        renderSearchResults((data.results || []).slice(0, 5));
+        hint.className = "search-hint";
+        hint.innerHTML = `<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-8h.01"/></svg> 검색 결과는 최대 5개까지 표시됩니다.`;
+      } catch (_) {
+        results.hidden = true;
+        renderCredentialWarning("검색에 실패했습니다. 인증값과 인터넷 연결을 확인하세요.");
+      }
+    }
+
+    function renderSearchResults(movies) {
+      const container = document.getElementById("searchResults");
+      if (!movies.length) {
+        container.innerHTML = '<div class="loading">검색 결과가 없습니다. 직접 추가를 이용해 보세요.</div>';
+        return;
+      }
+      container.innerHTML = "";
+      movies.forEach(movie => {
+        const year = movie.release_date?.slice(0, 4) || "연도 미상";
+        const exists = state.movies.some(item => item.source === "tmdb" && item.tmdbId === movie.id);
+        const card = document.createElement("article");
+        card.className = "result-card";
+        const poster = movie.poster_path
+          ? `<img class="result-poster" src="${POSTER_BASE + movie.poster_path}" alt="">`
+          : '<div class="result-poster result-placeholder">NO<br>IMAGE</div>';
+        card.innerHTML = `${poster}<div class="result-info"><div class="result-title"></div><div class="result-year">${year}</div></div><button class="result-add" type="button" ${exists ? "disabled" : ""} title="${exists ? "이미 추가됨" : "추가"}">${exists ? "✓" : "+"}</button>`;
+        card.querySelector(".result-title").textContent = movie.title;
+        card.querySelector(".result-add").addEventListener("click", () => addTmdbMovie(movie));
+        container.appendChild(card);
+      });
+    }
+
+    function addTmdbMovie(movie) {
+      if (state.movies.some(item => item.source === "tmdb" && item.tmdbId === movie.id)) return showToast("이미 추가한 영화입니다.", "error");
+      state.movies.push({
+        id: `tmdb-${movie.id}`,
+        source: "tmdb",
+        tmdbId: movie.id,
+        title: movie.title,
+        year: movie.release_date?.slice(0, 4) || "",
+        posterPath: movie.poster_path || "",
+        tier: "unranked",
+        order: nextOrder("unranked"),
+        rating: null,
+        watchedDate: "",
+        review: ""
+      });
+      saveState();
+      renderBoard();
+      searchMovies();
+      showToast(`${movie.title}을(를) 미분류에 추가했습니다.`);
+    }
+
+    function openDetail(id) {
+      const movie = state.movies.find(item => item.id === id);
+      if (!movie) return;
+      editingMovieId = id;
+      pendingTier = movie.tier;
+      ratingIsEmpty = movie.rating == null;
+      document.getElementById("detailTitle").textContent = movie.title;
+      document.getElementById("detailYear").textContent = movie.year ? `${movie.year}년 개봉` : "개봉 연도 미상";
+      document.getElementById("watchedDateInput").value = movie.watchedDate || "";
+      document.getElementById("reviewInput").value = movie.review || "";
+      document.getElementById("ratingInput").value = movie.rating ?? 3;
+      updateRatingLabel();
+      const poster = document.getElementById("detailPoster");
+      poster.innerHTML = movie.posterPath
+        ? `<img src="${POSTER_BASE + movie.posterPath}" alt="${escapeHtml(movie.title)} 포스터">`
+        : `<div class="detail-placeholder">${escapeHtml(movie.title)}</div>`;
+      renderTierPicker();
+      showModal("detailModal");
+    }
+
+    function renderTierPicker() {
+      const picker = document.getElementById("tierPicker");
+      picker.innerHTML = ALL_TIERS.map(tier => `<button class="tier-option ${tier === pendingTier ? "active" : ""}" type="button" data-tier="${tier}">${tier === "unranked" ? "미분류" : tier}</button>`).join("");
+      picker.querySelectorAll("button").forEach(button => button.addEventListener("click", () => {
+        pendingTier = button.dataset.tier;
+        renderTierPicker();
+      }));
+    }
+
+    function updateRatingLabel() {
+      const value = Number(document.getElementById("ratingInput").value);
+      document.getElementById("ratingValue").textContent = ratingIsEmpty ? "평가 안 함" : `★ ${value.toFixed(1)}`;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function exportMarkdown() {
+      const date = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" });
+      const lines = [
+        "# 나의 영화 티어리스트",
+        "",
+        `- 닉네임: ${state.nickname || "미설정"}`,
+        `- 내보낸 날짜: ${date}`,
+        `- 전체 영화: ${state.movies.length}편`,
+        ""
+      ];
+      ALL_TIERS.forEach(tier => {
+        lines.push(`## ${tierName(tier)}`, "");
+        const movies = state.movies.filter(movie => movie.tier === tier).sort((a, b) => a.order - b.order);
+        if (!movies.length) lines.push("- 영화 없음");
+        movies.forEach(movie => {
+          const details = [
+            movie.year ? `${movie.year}` : "연도 미상",
+            movie.rating != null ? `별점 ${Number(movie.rating).toFixed(1)}/5` : "평가 안 함",
+            movie.watchedDate ? `본 날짜 ${movie.watchedDate}` : "본 날짜 미기록"
+          ].join(" · ");
+          lines.push(`- **${movie.title.replace(/\*/g, "\\*")}** (${details})`);
+          if (movie.review) lines.push(`  - 한줄평: ${movie.review.replace(/\n/g, " ")}`);
+        });
+        lines.push("");
+      });
+      lines.push("---", "", "아래 데이터는 이 페이지에서 복원할 때 사용합니다. 수정하지 마세요.", "", "```movie-tierlist-data", JSON.stringify(state, null, 2), "```", "");
+      const blob = new Blob([lines.join("\n")], { type: "text/markdown;charset=utf-8" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `movie-tierlist-${date}.md`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+      showToast("영화 기록을 MD 파일로 내보냈습니다.");
+    }
+
+    async function importMarkdown(file) {
+      try {
+        const text = await file.text();
+        const match = text.match(/```movie-tierlist-data\s*\n([\s\S]*?)\n```/);
+        if (!match) throw new Error("no data block");
+        const imported = JSON.parse(match[1]);
+        if (!isValidState(imported)) throw new Error("invalid data");
+        if (!confirm("현재 영화 기록이 사라지고 불러온 기록으로 덮어써집니다. 닉네임과 TMDB 설정은 유지됩니다. 계속할까요?")) return;
+        const currentNickname = state.nickname;
+        state = { ...imported, nickname: currentNickname };
+        normalizeTierOrders();
+        saveState();
+        renderBoard();
+        showToast("영화 기록을 성공적으로 불러왔습니다.");
+      } catch (_) {
+        showToast("불러올 수 없는 파일입니다. 기존 데이터는 그대로 유지됩니다.", "error");
+      } finally {
+        document.getElementById("importFile").value = "";
+      }
+    }
+
+    document.getElementById("searchBtn").addEventListener("click", searchMovies);
+    document.getElementById("searchInput").addEventListener("keydown", event => { if (event.key === "Enter") searchMovies(); });
+    document.getElementById("manualAddBtn").addEventListener("click", () => showModal("manualModal"));
+    document.getElementById("exportBtn").addEventListener("click", exportMarkdown);
+    document.getElementById("importBtn").addEventListener("click", () => document.getElementById("importFile").click());
+    document.getElementById("importFile").addEventListener("change", event => { if (event.target.files[0]) importMarkdown(event.target.files[0]); });
+    document.getElementById("openCredentialBtn").addEventListener("click", openCredentialModal);
+    document.getElementById("openDocsBtn").addEventListener("click", () => showModal("docsModal"));
+    document.addEventListener("click", event => {
+      if (!event.target.closest("[data-open-credential]")) return;
+      if (!document.getElementById("docsModal").hidden) hideModal("docsModal");
+      openCredentialModal();
+    });
+
+    document.getElementById("credentialToggle").addEventListener("click", () => {
+      const input = document.getElementById("credentialInput");
+      const showing = input.type === "text";
+      input.type = showing ? "password" : "text";
+      document.getElementById("credentialToggle").textContent = showing ? "보기" : "숨기기";
+    });
+    document.getElementById("credentialForm").addEventListener("submit", async event => {
+      event.preventDefault();
+      const input = document.getElementById("credentialInput");
+      const credential = input.value.trim();
+      if (credential.length < 20) {
+        setCredentialStatus("인증값이 너무 짧습니다. TMDB 발급 화면에서 전체 값을 다시 복사해주세요.", "error");
+        return;
+      }
+      try {
+        localStorage.setItem(CREDENTIAL_STORAGE_KEY, credential);
+      } catch (_) {
+        setCredentialStatus("브라우저 저장 공간을 사용할 수 없어 인증값을 저장하지 못했습니다.", "error");
+        return;
+      }
+      const saveButton = document.getElementById("saveCredentialBtn");
+      saveButton.disabled = true;
+      saveButton.textContent = "연결 확인 중…";
+      setCredentialStatus("인증값을 저장했습니다. TMDB 연결을 확인하고 있습니다.");
+      updateCredentialUI();
+      try {
+        const response = await tmdbFetch("/configuration", {}, credential);
+        if (!response.ok) throw new Error("invalid credential");
+        setCredentialStatus("연결에 성공했습니다. 이제 영화 검색을 사용할 수 있습니다.", "success");
+        showToast("TMDB 인증값을 저장하고 연결을 확인했습니다.");
+        setTimeout(() => hideModal("credentialModal"), 700);
+      } catch (_) {
+        setCredentialStatus("값은 저장했지만 연결에 실패했습니다. 인증값과 인터넷 연결을 확인한 뒤 다시 저장해주세요.", "error");
+        renderCredentialWarning("저장된 인증값의 연결 확인에 실패했습니다. 값을 다시 확인하세요.");
+      } finally {
+        saveButton.disabled = false;
+        saveButton.textContent = "저장하고 연결 확인";
+      }
+    });
+    document.getElementById("removeCredentialBtn").addEventListener("click", () => {
+      if (getTmdbCredential() && !confirm("이 브라우저에 저장된 TMDB 인증값을 삭제할까요? 영화 기록은 삭제되지 않습니다.")) return;
+      try { localStorage.removeItem(CREDENTIAL_STORAGE_KEY); } catch (_) {}
+      document.getElementById("credentialInput").value = "";
+      updateCredentialUI();
+      setCredentialStatus("저장된 인증값을 삭제했습니다. 직접 추가 기능은 계속 사용할 수 있습니다.", "success");
+      showToast("TMDB 인증값을 삭제했습니다.");
+    });
+
+    document.getElementById("editNicknameBtn").addEventListener("click", () => {
+      document.getElementById("nicknameInput").value = state.nickname;
+      showModal("nicknameModal");
+    });
+    document.getElementById("nicknameForm").addEventListener("submit", event => {
+      event.preventDefault();
+      const nickname = document.getElementById("nicknameInput").value.trim();
+      if (!nickname) return;
+      state.nickname = nickname;
+      saveState();
+      hideModal("nicknameModal");
+      showToast("닉네임을 저장했습니다.");
+      if (!getTmdbCredential()) setTimeout(openCredentialModal, 250);
+    });
+    document.querySelector(".nickname-close").addEventListener("click", () => {
+      if (state.nickname) hideModal("nicknameModal");
+      else showToast("처음 시작하려면 닉네임을 입력해주세요.", "error");
+    });
+
+    document.getElementById("manualForm").addEventListener("submit", event => {
+      event.preventDefault();
+      const title = document.getElementById("manualMovieTitle").value.trim();
+      const year = document.getElementById("manualMovieYear").value.trim();
+      if (state.movies.some(movie => movie.source === "manual" && movie.title.trim().toLocaleLowerCase("ko-KR") === title.toLocaleLowerCase("ko-KR") && String(movie.year) === year)) {
+        return showToast("같은 제목과 연도의 영화가 이미 있습니다.", "error");
+      }
+      state.movies.push({
+        id: `manual-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        source: "manual",
+        title,
+        year,
+        posterPath: "",
+        tier: "unranked",
+        order: nextOrder("unranked"),
+        rating: null,
+        watchedDate: "",
+        review: ""
+      });
+      saveState();
+      renderBoard();
+      event.target.reset();
+      hideModal("manualModal");
+      showToast(`${title}을(를) 미분류에 추가했습니다.`);
+    });
+
+    document.getElementById("ratingInput").addEventListener("input", () => {
+      ratingIsEmpty = false;
+      updateRatingLabel();
+    });
+    document.getElementById("clearRatingBtn").addEventListener("click", () => {
+      ratingIsEmpty = true;
+      updateRatingLabel();
+    });
+    document.getElementById("detailForm").addEventListener("submit", event => {
+      event.preventDefault();
+      const movie = state.movies.find(item => item.id === editingMovieId);
+      if (!movie) return;
+      const oldTier = movie.tier;
+      movie.rating = ratingIsEmpty ? null : Number(document.getElementById("ratingInput").value);
+      movie.watchedDate = document.getElementById("watchedDateInput").value;
+      movie.review = document.getElementById("reviewInput").value.trim();
+      movie.tier = pendingTier;
+      if (oldTier !== pendingTier) movie.order = nextOrder(pendingTier);
+      normalizeTierOrders();
+      saveState();
+      renderBoard();
+      hideModal("detailModal");
+      showToast(`${movie.title}의 기록을 저장했습니다.`);
+    });
+    document.getElementById("deleteMovieBtn").addEventListener("click", () => {
+      const movie = state.movies.find(item => item.id === editingMovieId);
+      if (!movie || !confirm(`‘${movie.title}’을(를) 삭제할까요? 삭제한 기록은 되돌릴 수 없습니다.`)) return;
+      state.movies = state.movies.filter(item => item.id !== editingMovieId);
+      normalizeTierOrders();
+      saveState();
+      renderBoard();
+      hideModal("detailModal");
+      showToast(`${movie.title}을(를) 삭제했습니다.`);
+    });
+
+    document.querySelectorAll("[data-close]").forEach(button => button.addEventListener("click", () => hideModal(button.dataset.close)));
+    document.querySelectorAll(".modal-backdrop").forEach(backdrop => backdrop.addEventListener("mousedown", event => {
+      if (event.target === backdrop && (backdrop.id !== "nicknameModal" || state.nickname)) hideModal(backdrop.id);
+    }));
+    document.addEventListener("keydown", event => {
+      if (event.key !== "Escape") return;
+      const openModal = [...document.querySelectorAll(".modal-backdrop:not([hidden])")].pop();
+      if (openModal && (openModal.id !== "nicknameModal" || state.nickname)) hideModal(openModal.id);
+    });
+
+    renderBoard();
+    updateCredentialUI();
+    if (!state.nickname) showModal("nicknameModal");
+    else if (!getTmdbCredential()) openCredentialModal();
+  </script>
+</body>
+</html>
