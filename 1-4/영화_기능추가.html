@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>내 영화 티어리스트</title>
+  <style>
+    :root { --paper:#faf8f3; --ink:#242922; --muted:#5f685d; --line:#d9dad1; --green:#276453; --sage:#e3eee7; --peach:#f2e6dc; }
+    * { box-sizing:border-box; }
+    body { margin:0; color:var(--ink); background:var(--paper); font-family:system-ui,-apple-system,sans-serif; line-height:1.6;  }
+    main { width:min(100% - 32px,860px); margin:32px auto 48px; }
+    header { display:flex; align-items:start; justify-content:space-between; gap:20px; flex-wrap:wrap; }
+    h1 { margin:0; font-size:clamp(26px,5vw,34px); line-height:1.25; letter-spacing:-.03em; }
+    .sub { margin:10px 0 0; color:var(--muted); max-width:46ch; }
+    .tools { display:flex; flex-wrap:wrap; gap:8px; width:100%; margin-top:20px; }
+    .tools input { min-width:0; flex:1 1 160px; border:1.5px solid var(--line); border-radius:12px; padding:11px 12px; font:inherit; }
+    button { font:inherit; cursor:pointer; }
+    .tools button { padding:10px 15px; border:1px solid var(--green); border-radius:12px; font-weight:700; background:var(--green); color:#fff; }
+    .tools .reset { color:var(--green); background:#fff; }
+    #message { min-height:26px; margin:14px 0; font-size:14px; color:var(--muted); }
+    .tiers { display:grid; gap:10px; }
+    .row { display:flex; min-height:90px; background:#fff; border:1.5px solid var(--line); border-radius:14px; overflow:hidden; }
+    .row.over { outline:3px solid var(--green); outline-offset:1px; }
+    .label { width:64px; flex-shrink:0; border:0; color:white; font-size:26px; font-weight:800; padding:12px 4px; }
+    .S .label { background:#a55239; } .A .label { background:#b4763e; } .B .label { background:#276453; } .C .label { background:#67725d; }
+    .drop { flex:1; min-width:0; display:flex; flex-wrap:wrap; align-content:flex-start; gap:9px; padding:12px; min-height:88px; }
+    .pool { margin-top:22px; }
+    .pool-head { margin:0 0 8px; border:0; padding:0; background:transparent; color:var(--muted); font-size:17px; font-weight:700; text-align:left; }
+    #pool { border:1.5px dashed var(--line); border-radius:14px; background:#fff; }
+    .card { width:98px; min-height:62px; padding:8px; border:1px solid transparent; border-radius:10px; font-size:14px; font-weight:650; line-height:1.35; overflow-wrap:anywhere; color:var(--ink); cursor:grab; }
+    .card[aria-pressed="true"] { outline:3px solid var(--green); outline-offset:2px; }
+    .count { display:block; font-size:14px; font-weight:600; }
+    .note { font-size:13px; color:var(--muted); margin-top:18px; }
+    :focus-visible { outline:3px solid #ba613a; outline-offset:3px; }
+    @media(max-width:420px) { .label { width:48px; } .card { width:90px; } .drop { padding:10px; gap:8px; } }
+
+    /* [더할 기능] TMDB 검색 */
+    [hidden] { display:none !important; }
+    .search-area { width:100%; margin-top:20px; }
+    .search-area .tools { margin-top:0; }
+    #add-form { margin-top:12px; }
+    .tools .secondary { color:var(--green); background:#fff; }
+    .tools button:disabled, .btn:disabled { opacity:.6; cursor:wait; }
+    .btn { padding:8px 13px; border:1px solid var(--green); border-radius:10px; font-weight:700; background:var(--green); color:#fff; }
+    .btn.ghost { color:var(--green); background:#fff; }
+    .btn.danger { color:#a55239; border-color:#a55239; background:#fff; }
+    .panel { margin-top:10px; padding:14px; background:#fff; border:1.5px solid var(--line); border-radius:14px; }
+    .panel h2 { margin:0 0 4px; font-size:16px; }
+    .panel p { margin:0 0 10px; font-size:13px; color:var(--muted); overflow-wrap:anywhere; }
+    .panel-row { display:flex; flex-wrap:wrap; gap:8px; }
+    .panel-row input { min-width:0; flex:1 1 200px; border:1.5px solid var(--line); border-radius:10px; padding:9px 11px; font:inherit; }
+    .panel-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+    #auth-status { min-height:22px; margin:10px 0 0; font-size:14px; color:var(--ink); }
+    #search-status { min-height:0; margin:10px 0 0; font-size:14px; color:var(--muted); overflow-wrap:anywhere; }
+    #search-status:empty { margin:0; }
+    .notice { padding:12px; background:var(--peach); border-radius:12px; color:var(--ink); }
+    .notice p { margin:0 0 8px; }
+    .results { list-style:none; margin:10px 0 0; padding:0; display:grid; gap:8px; }
+    .results:empty { margin:0; }
+    .result { display:flex; align-items:center; gap:10px; padding:8px; background:#fff; border:1.5px solid var(--line); border-radius:12px; }
+    .poster { width:46px; height:69px; flex-shrink:0; border-radius:6px; object-fit:cover; background:var(--sage); display:flex; align-items:center; justify-content:center; font-size:11px; line-height:1.3; text-align:center; color:var(--muted); }
+    .info { flex:1; min-width:0; overflow-wrap:anywhere; }
+    .info strong { display:block; font-size:15px; line-height:1.35; }
+    .info span { font-size:13px; color:var(--muted); }
+    .result .btn { flex-shrink:0; }
+    .credit { margin-top:28px; padding-top:14px; border-top:1px solid var(--line); font-size:13px; color:var(--muted); overflow-wrap:anywhere; }
+    .credit a { color:var(--green); font-weight:700; }
+  </style>
+</head>
+<body>
+  <main>
+    <header><div><h1>내 영화 티어리스트</h1><p class="sub">영화를 선택한 뒤 옮길 등급 글자를 눌러 주세요. 카드를 끌어서 놓아도 됩니다.</p></div></header>
+    <section class="search-area" aria-label="TMDB 영화 검색">
+      <form class="tools" id="search-form">
+        <input id="search-query" type="search" aria-label="TMDB 영화 검색어" placeholder="TMDB에서 영화 검색" maxlength="80">
+        <button type="submit" id="search-button">검색</button>
+        <button type="button" class="secondary" id="settings-button" aria-expanded="false" aria-controls="settings-panel">TMDB 설정</button>
+      </form>
+      <div class="panel" id="settings-panel" hidden>
+        <h2>TMDB 설정</h2>
+        <p>TMDB API 키(v3) 또는 읽기 액세스 토큰을 넣어 주세요. 인증값은 이 브라우저에만 저장되고 HTML 파일과 영화 목록 저장에는 들어가지 않아요. ‘처음으로’를 눌러도 지워지지 않아요.</p>
+        <div class="panel-row">
+          <input id="auth-input" type="password" aria-label="TMDB API 키 또는 읽기 액세스 토큰" placeholder="API 키(v3) 또는 읽기 액세스 토큰" autocomplete="off" spellcheck="false">
+          <button type="button" class="btn ghost" id="auth-toggle" aria-pressed="false">보기</button>
+        </div>
+        <div class="panel-actions">
+          <button type="button" class="btn" id="auth-save">저장</button>
+          <button type="button" class="btn danger" id="auth-delete">삭제</button>
+          <button type="button" class="btn ghost" id="auth-close">닫기</button>
+        </div>
+        <p id="auth-status" role="status"></p>
+      </div>
+      <div id="search-status" role="status"></div>
+      <ul class="results" id="results" aria-label="TMDB 검색 결과"></ul>
+    </section>
+    <form class="tools" id="add-form">
+      <input id="title" aria-label="영화 제목" placeholder="영화 제목 추가" maxlength="80">
+      <button type="submit">추가</button>
+      <button type="button" class="reset" id="reset">처음으로</button>
+    </form>
+    <p id="message" role="status">영화를 선택해 S·A·B·C로 나누어 보세요.</p>
+    <section class="tiers" id="tiers" aria-label="영화 등급"></section>
+    <section class="pool" aria-label="아직 안 정한 영화">
+      <button class="pool-head" id="pool-label" type="button" aria-label="미분류로 옮기기">아직 안 정한 영화</button>
+      <div class="drop" id="pool" data-tier="pool"></div>
+    </section>
+    <p class="note">같은 브라우저에서 이 파일을 다시 열면 정리한 목록이 남습니다. 다른 사람에게 파일을 보내도 내 입력 내역까지 전달되지는 않습니다.</p>
+    <footer class="credit">영화 검색 정보 출처: <a href="https://www.themoviedb.org/" target="_blank" rel="noopener noreferrer">TMDB (The Movie Database)</a>. 이 서비스는 TMDB API를 사용하지만 TMDB의 보증이나 인증을 받지 않았습니다.</footer>
+  </main>
+  <script>
+    const KEY = "codyssey-activity-04-v2";
+    const LEVELS = ['S', 'A', 'B', 'C', 'pool'];
+    const TITLES = ["기생충","인터스텔라","라라랜드","센과 치히로의 행방불명","어벤져스: 엔드게임","범죄도시","타이타닉","토이 스토리"];
+    const COLORS = ["#f2e6dc","#e3eee7","#ede7f6","#fcefd9","#e2ecf4","#f6e3e3"];
+    const initial = () => ({ nextId: TITLES.length + 1, items: TITLES.map((title,index) => ({ id: 'm' + (index + 1), title, tier: 'pool' })) });
+    let state = initial();
+    let selected = null;
+    try {
+      const stored = JSON.parse(localStorage.getItem(KEY) || 'null');
+      if (stored && Number.isSafeInteger(stored.nextId) && Array.isArray(stored.items)
+          && stored.items.every(item => typeof item.id === 'string' && typeof item.title === 'string' && LEVELS.includes(item.tier))) state = stored;
+    } catch {}
+    function showMessage(message) { document.querySelector('#message').textContent = message; }
+    function save() {
+      try { localStorage.setItem(KEY, JSON.stringify(state)); }
+      catch { showMessage('이 브라우저에서는 저장하지 못했어요. 현재 화면에서 확인한 내용과 다시 열어 확인한 내용을 구분해 주세요.'); }
+    }
+    function move(id,tier) {
+      const item = state.items.find(item => item.id === id);
+      if (!item || !LEVELS.includes(tier)) return;
+      item.tier = tier; selected = null; save(); render();
+      showMessage((item.title || '영화') + '를 옮겼어요.');
+    }
+    function card(item,index) {
+      const element = document.createElement('button');
+      element.type = 'button'; element.className = 'card'; element.draggable = true;
+      element.textContent = item.title || ' '; element.dataset.id = item.id;
+      element.style.backgroundColor = COLORS[index % COLORS.length];
+      element.setAttribute('aria-label',item.title || '영화 카드');
+      element.setAttribute('aria-pressed',String(selected === item.id));
+      element.addEventListener('click',event => {
+        event.stopPropagation(); selected = selected === item.id ? null : item.id; render();
+        showMessage(selected ? (item.title || '영화') + '를 선택했어요.' : '선택을 해제했어요.');
+      });
+      element.addEventListener('dragstart',event => { event.dataTransfer.setData('text/plain',item.id); });
+      return element;
+    }
+    function wireDrop(element,tier) {
+      element.addEventListener('dragover',event => { event.preventDefault(); element.closest('.row')?.classList.add('over'); });
+      element.addEventListener('dragleave',() => element.closest('.row')?.classList.remove('over'));
+      element.addEventListener('drop',event => { event.preventDefault(); move(event.dataTransfer.getData('text/plain'),tier); });
+      element.onclick = () => { if (selected) move(selected,tier); };
+    }
+    function render() {
+      const tiers = document.querySelector('#tiers'); tiers.replaceChildren();
+      for (const tier of LEVELS.filter(value => value !== 'pool')) {
+        const row = document.createElement('div'); row.className = 'row ' + tier;
+        const label = document.createElement('button'); label.type = 'button'; label.className = 'label';
+        label.textContent = tier; label.setAttribute('aria-label',tier + '등급으로 옮기기');
+        label.addEventListener('click',() => { if (selected) move(selected,tier); else showMessage('먼저 영화 카드를 선택해 주세요.'); });
+
+        const drop = document.createElement('div'); drop.className = 'drop'; drop.dataset.tier = tier;
+        state.items.forEach((item,index) => { if (item.tier === tier) drop.append(card(item,index)); });
+        wireDrop(drop,tier); row.append(label,drop); tiers.append(row);
+      }
+      const pool = document.querySelector('#pool'); pool.replaceChildren();
+      state.items.forEach((item,index) => { if (item.tier === 'pool') pool.append(card(item,index)); });
+
+    }
+    wireDrop(document.querySelector('#pool'),'pool');
+    document.querySelector('#pool-label').addEventListener('click',() => { if (selected) move(selected,'pool'); else showMessage('먼저 영화 카드를 선택해 주세요.'); });
+    document.querySelector('#add-form').addEventListener('submit',event => {
+      event.preventDefault(); const input = document.querySelector('#title'); const title = input.value.trim();
+      if (!title) { showMessage('영화 제목을 입력해 주세요.'); input.focus(); return; }
+      if (state.items.some(item => item.title === title)) { showMessage('이미 있는 영화 제목이에요. 다른 제목을 넣어 주세요.'); return; }
+      state.items.push({ id: 'm' + state.nextId++, title, tier: 'pool' });
+      save(); render(); input.value = ''; showMessage('영화를 추가했어요.'); input.focus();
+    });
+    document.querySelector('#reset').addEventListener('click',() => {
+      state = initial(); selected = null; document.querySelector('#title').value = ''; save(); render(); showMessage('처음 목록으로 돌아왔어요.');
+    });
+    render();
+
+    /* ===== [더할 기능] TMDB로 영화 검색해서 추가하기 =====
+       인증값은 영화 목록(KEY)과 다른 저장 칸(AUTH_KEY)에 따로 보관합니다.
+       이 HTML 파일 안에는 인증값을 적지 않습니다. */
+    const AUTH_KEY = "codyssey-activity-04-tmdb-auth";
+    const TMDB_API = 'https://api.themoviedb.org/3/';
+    const TMDB_IMAGE = 'https://image.tmdb.org/t/p/w92';
+    const searchForm = document.querySelector('#search-form');
+    const searchInput = document.querySelector('#search-query');
+    const searchButton = document.querySelector('#search-button');
+    const searchStatus = document.querySelector('#search-status');
+    const results = document.querySelector('#results');
+    const settingsButton = document.querySelector('#settings-button');
+    const panel = document.querySelector('#settings-panel');
+    const authInput = document.querySelector('#auth-input');
+    const authToggle = document.querySelector('#auth-toggle');
+    const authSave = document.querySelector('#auth-save');
+    const authStatus = document.querySelector('#auth-status');
+    let searchRequest = 0;
+
+    function loadAuth() { try { return localStorage.getItem(AUTH_KEY) || ''; } catch { return ''; } }
+    function storeAuth(value) {
+      try { if (value) localStorage.setItem(AUTH_KEY,value); else localStorage.removeItem(AUTH_KEY); return true; }
+      catch { return false; }
+    }
+    function normalizeAuth(value) { return value.trim().replace(/^Bearer\s+/i,''); }
+
+    // 32자리 영숫자(16진수)는 API 키(v3), 그 밖의 값은 읽기 액세스 토큰으로 봅니다.
+    async function tmdbGet(path,params,auth) {
+      if (!/^[\x21-\x7e]+$/.test(auth)) throw { kind: 'auth' };
+      const url = new URL(TMDB_API + path);
+      for (const [name,value] of Object.entries(params)) url.searchParams.set(name,value);
+      const headers = { accept: 'application/json' };
+      if (/^[0-9a-f]{32}$/i.test(auth)) url.searchParams.set('api_key',auth);
+      else headers.Authorization = 'Bearer ' + auth;
+      let response;
+      try { response = await fetch(url,{ headers }); }
+      catch { throw { kind: 'network' }; }
+      if (response.status === 401 || response.status === 403) throw { kind: 'auth' };
+      if (!response.ok) throw { kind: 'other' };
+      try { return await response.json(); } catch { throw { kind: 'other' }; }
+    }
+
+    const NOTICES = {
+      none: 'TMDB 인증값이 없어 검색할 수 없어요. ‘TMDB 설정’에서 API 키(v3) 또는 읽기 액세스 토큰을 넣어 주세요.',
+      auth: 'TMDB 인증값이 올바르지 않아 검색하지 못했어요. ‘TMDB 설정’에서 인증값을 확인해 주세요.',
+      network: '인터넷 연결 문제로 TMDB에 연결하지 못했어요. 연결을 확인한 뒤 다시 검색하거나 ‘TMDB 설정’을 확인해 주세요.',
+      other: 'TMDB 검색 중 문제가 생겼어요. 잠시 후 다시 시도하거나 ‘TMDB 설정’을 확인해 주세요.'
+    };
+    function showSearchNotice(kind) {
+      results.replaceChildren();
+      const box = document.createElement('div'); box.className = 'notice';
+      const text = document.createElement('p');
+      text.textContent = (NOTICES[kind] || NOTICES.other) + ' 그동안에도 아래에서 제목을 직접 추가할 수 있어요.';
+      const button = document.createElement('button'); button.type = 'button'; button.className = 'btn';
+      button.textContent = 'TMDB 설정'; button.addEventListener('click',openSettings);
+      box.append(text,button); searchStatus.replaceChildren(box);
+    }
+    function setSearchStatus(text) { searchStatus.replaceChildren(); searchStatus.textContent = text; }
+
+    function addFromSearch(title) {
+      const name = (title || '').trim();
+      if (!name) { showMessage('제목이 없는 영화라 추가하지 못했어요.'); return; }
+      if (state.items.some(item => item.title === name)) { showMessage('‘' + name + '’은(는) 이미 있는 영화 제목이에요. 다시 추가하지 않았어요.'); return; }
+      state.items.push({ id: 'm' + state.nextId++, title: name, tier: 'pool' });
+      save(); render(); showMessage('‘' + name + '’을(를) 아직 안 정한 영화에 추가했어요.');
+    }
+
+    function renderResults(list) {
+      results.replaceChildren();
+      for (const movie of list) {
+        const title = (movie.title || movie.original_title || '').trim() || '제목 없음';
+        const year = /^\d{4}/.test(movie.release_date || '') ? movie.release_date.slice(0,4) + '년' : '개봉 연도 정보 없음';
+        const li = document.createElement('li'); li.className = 'result';
+        let poster;
+        const placeholder = () => { const box = document.createElement('div'); box.className = 'poster'; box.textContent = '포스터 없음'; return box; };
+        if (movie.poster_path) {
+          poster = document.createElement('img'); poster.className = 'poster';
+          poster.src = TMDB_IMAGE + movie.poster_path; poster.alt = title + ' 포스터'; poster.loading = 'lazy';
+          poster.addEventListener('error',() => poster.replaceWith(placeholder()),{ once: true });
+        } else poster = placeholder();
+        const info = document.createElement('div'); info.className = 'info';
+        const strong = document.createElement('strong'); strong.textContent = title;
+        const span = document.createElement('span'); span.textContent = year;
+        info.append(strong,span);
+        const add = document.createElement('button'); add.type = 'button'; add.className = 'btn'; add.textContent = '추가';
+        add.setAttribute('aria-label',title + ' 추가');
+        add.addEventListener('click',() => addFromSearch(title === '제목 없음' ? '' : title));
+        li.append(poster,info,add); results.append(li);
+      }
+    }
+
+    searchForm.addEventListener('submit',async event => {
+      event.preventDefault();
+      const query = searchInput.value.trim();
+      const request = ++searchRequest;
+      if (!query) { results.replaceChildren(); setSearchStatus('검색어를 입력해 주세요.'); searchInput.focus(); return; }
+      const auth = loadAuth();
+      if (!auth) { showSearchNotice('none'); return; }
+      results.replaceChildren(); setSearchStatus('TMDB에서 찾는 중이에요…'); searchButton.disabled = true;
+      try {
+        const data = await tmdbGet('search/movie',{ query, language: 'ko-KR', include_adult: 'false', page: '1' },auth);
+        if (request !== searchRequest) return;
+        const list = (Array.isArray(data.results) ? data.results : []).slice(0,5);
+        if (!list.length) { setSearchStatus('‘' + query + '’ 검색 결과가 없어요. 다른 검색어로 찾거나 아래에서 제목을 직접 추가해 주세요.'); return; }
+        setSearchStatus('‘' + query + '’ 검색 결과 ' + list.length + '개');
+        renderResults(list);
+      } catch (error) {
+        if (request === searchRequest) showSearchNotice(error && error.kind);
+      } finally {
+        if (request === searchRequest) searchButton.disabled = false;
+      }
+    });
+
+    function setAuthVisible(visible) {
+      authInput.type = visible ? 'text' : 'password';
+      authToggle.textContent = visible ? '숨기기' : '보기';
+      authToggle.setAttribute('aria-pressed',String(visible));
+    }
+    function openSettings() {
+      panel.hidden = false; settingsButton.setAttribute('aria-expanded','true');
+      const auth = loadAuth(); authInput.value = auth; setAuthVisible(false);
+      authStatus.textContent = auth ? '저장된 인증값이 있어요. 새 값을 넣고 저장하면 교체돼요.' : '저장된 인증값이 없어요.';
+      authInput.focus();
+    }
+    function closeSettings() { panel.hidden = true; settingsButton.setAttribute('aria-expanded','false'); settingsButton.focus(); }
+    settingsButton.addEventListener('click',() => { if (panel.hidden) openSettings(); else closeSettings(); });
+    document.querySelector('#auth-close').addEventListener('click',closeSettings);
+    authToggle.addEventListener('click',() => setAuthVisible(authInput.type === 'password'));
+    authInput.addEventListener('keydown',event => { if (event.key === 'Enter') { event.preventDefault(); authSave.click(); } });
+    authSave.addEventListener('click',async () => {
+      const value = normalizeAuth(authInput.value);
+      if (!value) { authStatus.textContent = '인증값을 입력해 주세요. 지우려면 ‘삭제’를 눌러 주세요.'; authInput.focus(); return; }
+      authStatus.textContent = 'TMDB 연결을 확인하는 중이에요…'; authSave.disabled = true;
+      try {
+        const data = await tmdbGet('authentication',{},value);
+        if (data && data.success === false) throw { kind: 'auth' };
+        if (!storeAuth(value)) { authStatus.textContent = '연결에는 성공했지만 이 브라우저에 저장하지 못했어요.'; return; }
+        authInput.value = value;
+        authStatus.textContent = '연결에 성공했어요. 인증값을 이 브라우저에 저장했어요.';
+        setSearchStatus('TMDB에 연결됐어요. 영화 제목을 검색해 보세요.');
+      } catch (error) {
+        const kind = error && error.kind;
+        authStatus.textContent = kind === 'auth' ? '연결에 실패했어요. 인증값이 올바르지 않아 저장하지 않았어요.'
+          : kind === 'network' ? '연결에 실패했어요. 인터넷 연결을 확인해 주세요. 인증값은 저장하지 않았어요.'
+          : '연결에 실패했어요. 잠시 후 다시 시도해 주세요. 인증값은 저장하지 않았어요.';
+      } finally { authSave.disabled = false; }
+    });
+    document.querySelector('#auth-delete').addEventListener('click',() => {
+      const had = !!loadAuth();
+      if (!storeAuth('')) { authStatus.textContent = '이 브라우저에서 인증값을 지우지 못했어요.'; return; }
+      authInput.value = ''; setAuthVisible(false); results.replaceChildren(); setSearchStatus('');
+      authStatus.textContent = had ? '인증값을 삭제했어요.' : '삭제할 인증값이 없어요.';
+    });
+  </script>
+</body>
+</html>

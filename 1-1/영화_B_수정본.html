@@ -30,7 +30,6 @@
     html { scroll-behavior: smooth; }
     body {
       margin: 0;
-      min-width: 980px;
       background:
         radial-gradient(circle at 6% 0%, rgba(231, 190, 95, .14), transparent 27rem),
         var(--paper);
@@ -353,6 +352,56 @@
     @media (max-width: 1150px) {
       .search-results { grid-template-columns: repeat(3, 1fr); }
     }
+
+    /* 태블릿 */
+    @media (max-width: 860px) {
+      .topbar { flex-wrap: wrap; gap: 10px; height: auto; padding: 12px 16px; }
+      .header-actions { flex-wrap: wrap; gap: 6px; }
+      .user-chip { margin-right: 0; }
+      main { width: calc(100% - 32px); padding: 28px 0 30px; }
+      .intro { flex-direction: column; align-items: flex-start; gap: 18px; }
+      .stats { gap: 24px; }
+      .stat { text-align: left; }
+      .search-results { grid-template-columns: repeat(2, 1fr); }
+      .board-header { flex-wrap: wrap; gap: 6px; }
+      .tier-row { grid-template-columns: 64px 1fr; }
+      .tier-label span { font-size: 28px; }
+      .unranked-box { grid-template-columns: 1fr; }
+      .unranked-label { padding: 14px 16px; border-right: 0; border-bottom: 1px dashed #c6c5bc; }
+      .unranked-label br { display: none; }
+      footer { flex-direction: column; align-items: flex-start; gap: 8px; }
+      .tmdb { flex-wrap: wrap; }
+    }
+
+    /* 휴대폰 */
+    @media (max-width: 560px) {
+      .topbar { position: static; }
+      .header-actions .btn { min-height: 36px; padding: 0 11px; font-size: 13px; }
+      .search-panel { padding: 14px; }
+      .search-row { flex-wrap: wrap; }
+      .search-box { flex: 1 1 100%; }
+      .search-row .btn { flex: 1; }
+      .search-results { grid-template-columns: 1fr; }
+      .tier-row { grid-template-columns: 48px 1fr; min-height: 128px; }
+      .tier-label span { font-size: 22px; }
+      .dropzone { min-height: 127px; gap: 9px; padding: 10px 12px; }
+      .unranked-box { min-height: 128px; }
+      .movie-card { width: 74px; height: 110px; flex-basis: 74px; }
+      .manual-card { padding: 9px; }
+      .manual-card::before { font-size: 16px; }
+      .manual-title { font-size: 11px; }
+      .modal-backdrop { padding: 12px; }
+      .modal { max-height: calc(100vh - 24px); }
+      .modal-header { padding: 18px 18px 0; }
+      .modal-body { padding: 18px; }
+      .form-row { grid-template-columns: 1fr; }
+      .detail-layout { grid-template-columns: 1fr; gap: 16px; }
+      .detail-poster { width: 120px; }
+      .tier-picker { grid-template-columns: repeat(4, 1fr); }
+      .detail-footer, .modal-actions { flex-wrap: wrap; }
+      .docs-content { padding-left: 6px; }
+      .toast { max-width: calc(100% - 32px); border-radius: 14px; }
+    }
   </style>
 </head>
 <body>
@@ -434,7 +483,7 @@
       <div class="unranked-box">
         <div class="unranked-label">
           <strong>미분류</strong>
-          <span>새로 추가한 영화가<br>여기에 모입니다.</span>
+          <span>새로 추가한 영화가 <br>여기에 모입니다.</span>
         </div>
         <div class="dropzone" id="zone-unranked" data-tier="unranked"></div>
       </div>
@@ -559,6 +608,7 @@
               <li>포스터를 S/A/B/C/D/F 또는 미분류 칸으로 드래그해 이동합니다. 같은 칸 안에서도 드래그해 순서를 바꿀 수 있습니다.</li>
               <li>포스터를 클릭하면 별점(0.5~5점, 0.5 단위), 본 날짜, 한줄평을 기록할 수 있습니다.</li>
               <li>상세창의 티어 버튼으로도 이동할 수 있으며, 삭제 시 확인창이 표시됩니다.</li>
+              <li>휴대폰에서는 드래그가 되지 않을 수 있으니, 포스터를 눌러 상세창의 티어 버튼으로 옮겨 주세요.</li>
               <li>별점·본 날짜·한줄평은 모두 비워 둔 상태로도 저장할 수 있습니다.</li>
             </ul>
           </div>
