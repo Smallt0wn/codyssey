@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mac 단축키 연습장</title>
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --line: #e2e5ea;
+    --text: #1d1f23;
+    --sub: #6b7280;
+    --accent: #2563eb;
+    --accent-soft: #e8efff;
+    --ok: #15803d;
+    --ok-bg: #e7f6ec;
+    --ok-line: #9fd8b2;
+    --bad: #b91c1c;
+    --bad-bg: #fdeeee;
+    --bad-line: #f3b9b9;
+    --gold: #d4a017;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Segoe UI", sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font: inherit; cursor: pointer; }
+
+  /* ---------- 좁은 화면 안내 ---------- */
+  #notice {
+    display: none;
+    min-height: 100vh;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+    text-align: center;
+    font-size: 17px;
+    font-weight: 600;
+  }
+  @media (max-width: 720px), (hover: none) and (pointer: coarse) {
+    #app { display: none !important; }
+    #notice { display: flex; }
+  }
+
+  /* ---------- 공통 배치 ---------- */
+  #app { max-width: 920px; margin: 0 auto; padding: 28px 24px 48px; }
+  h1 { margin: 0 0 18px; font-size: 26px; letter-spacing: -0.02em; }
+
+  .tabs {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    background: #e6e8ec;
+    border-radius: 12px;
+    margin-bottom: 22px;
+  }
+  .tab {
+    flex: 1;
+    border: 0;
+    background: transparent;
+    padding: 9px 8px;
+    border-radius: 9px;
+    color: var(--sub);
+    font-weight: 600;
+  }
+  .tab:hover { color: var(--text); }
+  .tab[aria-selected="true"] {
+    background: var(--card);
+    color: var(--text);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+
+  .panel[hidden], #keyboardArea[hidden] { display: none; }
+
+  .btn {
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--text);
+    padding: 9px 16px;
+    border-radius: 9px;
+    font-weight: 600;
+  }
+  .btn:hover:not(:disabled) { background: #f7f8fa; }
+  .btn:disabled { opacity: 0.45; cursor: default; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.primary:hover:not(:disabled) { background: #1d4fd8; }
+  .actions { display: flex; gap: 8px; justify-content: center; margin-top: 14px; flex-wrap: wrap; }
+
+  /* ---------- 진행 표시 ---------- */
+  .progress-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .progress-row .count { font-weight: 700; min-width: 64px; font-variant-numeric: tabular-nums; }
+  .bar { flex: 1; height: 8px; background: #e3e6eb; border-radius: 99px; overflow: hidden; }
+  .bar > i { display: block; height: 100%; background: var(--accent); border-radius: 99px; }
+  .bar.time > i { transition: width 0.1s linear; }
+
+  /* ---------- 문제 카드 ---------- */
+  .qcard {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 22px 24px;
+    text-align: center;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .qcard.ok { background: var(--ok-bg); border-color: var(--ok-line); }
+  .qcard.bad { background: var(--bad-bg); border-color: var(--bad-line); }
+  .qname { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
+  .qdesc { color: var(--sub); margin-top: 4px; }
+  .qfeedback { margin-top: 14px; min-height: 24px; font-weight: 600; color: var(--sub); }
+  .qcard.ok .qfeedback { color: var(--ok); }
+  .qcard.bad .qfeedback { color: var(--bad); }
+
+  /* ---------- 결과 카드 ---------- */
+  .result {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 24px;
+    text-align: center;
+  }
+  .result h2 { margin: 0 0 6px; font-size: 18px; color: var(--sub); font-weight: 600; }
+  .result .score { font-size: 26px; font-weight: 800; letter-spacing: -0.01em; }
+  .result .sub { color: var(--sub); margin-top: 4px; }
+  .retry { margin: 18px auto 0; max-width: 460px; text-align: left; }
+  .retry h3 { font-size: 14px; margin: 0 0 8px; color: var(--sub); font-weight: 600; }
+  .retry ul { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: 10px; }
+  .retry li { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; gap: 12px; }
+  .retry li + li { border-top: 1px solid var(--line); }
+  .retry .none { color: var(--sub); text-align: center; }
+
+  /* ---------- 타임어택 ---------- */
+  .ta-top { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+  .ta-time { font-size: 28px; font-weight: 800; min-width: 64px; font-variant-numeric: tabular-nums; }
+  .ta-time small { font-size: 14px; font-weight: 600; color: var(--sub); margin-left: 2px; }
+  .ta-stats { display: flex; gap: 18px; justify-content: center; margin-top: 12px; color: var(--sub); font-weight: 600; }
+  .ta-stats b { color: var(--text); font-variant-numeric: tabular-nums; }
+  .intro { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 26px; text-align: center; }
+  .intro p { margin: 0 0 4px; color: var(--sub); }
+
+  /* ---------- 키 기호 ---------- */
+  .keys { display: inline-flex; gap: 4px; flex-wrap: nowrap; }
+  kbd {
+    display: inline-block;
+    min-width: 26px;
+    padding: 2px 7px;
+    border: 1px solid #cfd3da;
+    border-bottom-width: 2px;
+    border-radius: 6px;
+    background: #fafbfc;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    color: var(--text);
+  }
+
+  /* ---------- 키보드 그림 ---------- */
+  #keyboardArea { margin-top: 26px; }
+  .combo {
+    text-align: center;
+    font-size: 24px;
+    font-weight: 700;
+    min-height: 40px;
+    margin-bottom: 10px;
+    letter-spacing: 0.04em;
+  }
+  .combo.empty { color: #a3a9b3; font-size: 15px; font-weight: 500; letter-spacing: 0; padding-top: 8px; }
+  .keyboard {
+    background: #d5d8dd;
+    border-radius: 16px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    user-select: none;
+  }
+  .krow { display: flex; gap: 6px; height: 46px; }
+  .krow.fnrow { height: 28px; }
+  .key {
+    flex: var(--w) 1 0;
+    min-width: 0;
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: 0 1px 0 #a9aeb7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: #2b2e33;
+    position: relative;
+    transition: background 0.05s, color 0.05s;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .key.small { font-size: 10.5px; }
+  .key.mod { flex-direction: column; font-size: 10px; line-height: 1.15; }
+  .key.mod .sym { font-size: 14px; }
+  .key.blank { background: #e9ebee; box-shadow: none; }
+  .key.lit { background: var(--accent); color: #fff; box-shadow: 0 1px 0 #1b3f9e; }
+  .key.hint { box-shadow: 0 0 0 3px var(--gold), 0 0 10px rgba(212,160,23,0.55); z-index: 1; }
+  .arrows {
+    flex: 3 1 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: 1fr 1fr;
+    gap: 3px;
+    min-width: 0;
+  }
+  .arrows .key { font-size: 11px; }
+  .arrows [data-code="ArrowUp"] { grid-column: 2; grid-row: 1; }
+  .arrows [data-code="ArrowLeft"] { grid-column: 1; grid-row: 2; }
+  .arrows [data-code="ArrowDown"] { grid-column: 2; grid-row: 2; }
+  .arrows [data-code="ArrowRight"] { grid-column: 3; grid-row: 2; }
+
+  /* ---------- 설명서 표 ---------- */
+  .manual-note { color: var(--sub); margin: 0 0 12px; }
+  table.manual {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  table.manual th, table.manual td { padding: 10px 16px; text-align: left; }
+  table.manual th { background: #f7f8fa; color: var(--sub); font-size: 13px; font-weight: 600; border-bottom: 1px solid var(--line); }
+  table.manual td { border-bottom: 1px solid var(--line); }
+  table.manual tr:last-child td { border-bottom: 0; }
+  table.manual td:first-child { width: 190px; }
+</style>
+</head>
+<body>
+
+<div id="notice">이 연습장은 Mac 컴퓨터의 키보드로 이용해 주세요.</div>
+
+<div id="app">
+  <h1>Mac 단축키 연습장</h1>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" data-tab="practice">연습 모드</button>
+    <button class="tab" role="tab" data-tab="timeattack">타임어택</button>
+    <button class="tab" role="tab" data-tab="vscode">VS Code</button>
+    <button class="tab" role="tab" data-tab="browser">브라우저</button>
+    <button class="tab" role="tab" data-tab="mac">Mac 기본</button>
+  </div>
+
+  <section class="panel" id="panel-practice"></section>
+  <section class="panel" id="panel-timeattack" hidden></section>
+  <section class="panel" id="panel-vscode" hidden></section>
+  <section class="panel" id="panel-browser" hidden></section>
+  <section class="panel" id="panel-mac" hidden></section>
+
+  <div id="keyboardArea">
+    <div class="combo empty" id="combo">키를 눌러 보세요</div>
+    <div class="keyboard" id="keyboard"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* =========================================================
+     자료
+     ========================================================= */
+  // m = ⌘, a = ⌥, c = ⌃, s = ⇧
+  var SHORTCUTS = [
+    { id: 'quickOpen',  m: 'm',   code: 'KeyP',      label: '⌘ P',       name: '파일 이름으로 빠르게 열기', desc: '프로젝트 안의 파일을 이름 몇 글자만 쳐서 바로 엽니다.' },
+    { id: 'palette',    m: 'ms',  code: 'KeyP',      label: '⌘ ⇧ P',     name: '명령 팔레트 열기',          desc: 'VS Code의 모든 기능을 이름으로 찾아 실행합니다.' },
+    { id: 'sidebar',    m: 'm',   code: 'KeyB',      label: '⌘ B',       name: '사이드바 보이기·숨기기',    desc: '왼쪽 탐색기 영역을 접거나 펼쳐 편집 공간을 넓힙니다.' },
+    { id: 'comment',    m: 'm',   code: 'Slash',     label: '⌘ /',       name: '줄 주석 달기·없애기',       desc: '커서가 있는 줄이나 선택한 줄을 주석으로 바꾸거나 되돌립니다.' },
+    { id: 'nextMatch',  m: 'm',   code: 'KeyD',      label: '⌘ D',       name: '같은 단어 하나 더 선택하기', desc: '선택한 단어와 같은 단어를 하나씩 더 골라 한꺼번에 고칩니다.' },
+    { id: 'lineUp',     m: 'a',   code: 'ArrowUp',   label: '⌥ ↑',       name: '줄을 위로 옮기기',          desc: '잘라 붙이지 않고 지금 줄을 한 줄 위로 올립니다.' },
+    { id: 'lineDown',   m: 'a',   code: 'ArrowDown', label: '⌥ ↓',       name: '줄을 아래로 옮기기',        desc: '잘라 붙이지 않고 지금 줄을 한 줄 아래로 내립니다.' },
+    { id: 'copyDown',   m: 'sa',  code: 'ArrowDown', label: '⇧ ⌥ ↓',     name: '줄을 아래로 복사하기',      desc: '지금 줄을 똑같이 복사해 바로 아래에 붙입니다.' },
+    { id: 'deleteLine', m: 'ms',  code: 'KeyK',      label: '⌘ ⇧ K',     name: '줄 지우기',                 desc: '따로 선택하지 않아도 커서가 있는 줄 전체를 지웁니다.' },
+    { id: 'lineBelow',  m: 'm',   code: 'Enter',     label: '⌘ Enter',   name: '아래에 새 줄 넣기',         desc: '커서가 줄 가운데 있어도 바로 아래에 빈 줄을 만들고 옮겨 갑니다.' },
+    { id: 'lineAbove',  m: 'ms',  code: 'Enter',     label: '⌘ ⇧ Enter', name: '위에 새 줄 넣기',           desc: '커서가 줄 가운데 있어도 바로 위에 빈 줄을 만들고 옮겨 갑니다.' },
+    { id: 'replace',    m: 'am',  code: 'KeyF',      label: '⌥ ⌘ F',     name: '찾아 바꾸기',               desc: '지금 파일에서 글자를 찾아 다른 글자로 바꿉니다.' },
+    { id: 'findAll',    m: 'ms',  code: 'KeyF',      label: '⌘ ⇧ F',     name: '모든 파일에서 찾기',        desc: '프로젝트의 모든 파일에서 글자를 한 번에 검색합니다.' },
+    { id: 'terminal',   m: 'c',   code: 'Backquote', label: '⌃ `',       name: '터미널 열기·닫기',          desc: '편집기 아래의 통합 터미널을 열거나 닫습니다.' },
+    { id: 'format',     m: 'sa',  code: 'KeyF',      label: '⇧ ⌥ F',     name: '문서 서식 맞추기',          desc: '들여쓰기와 띄어쓰기를 규칙에 맞게 한 번에 정리합니다.' }
+  ];
+  SHORTCUTS.forEach(function (s) {
+    s.mods = {
+      meta: s.m.indexOf('m') >= 0,
+      alt: s.m.indexOf('a') >= 0,
+      ctrl: s.m.indexOf('c') >= 0,
+      shift: s.m.indexOf('s') >= 0
+    };
+  });
+
+  var BROWSER_MANUAL = [
+    ['⌘ T', '새 탭 열기'],
+    ['⌘ W', '지금 탭 닫기'],
+    ['⌘ ⇧ T', '닫은 탭 다시 열기'],
+    ['⌘ L', '주소창으로 이동하기'],
+    ['⌘ R', '새로고침'],
+    ['⌘ ⇧ R', '강력 새로고침 (저장된 사본 없이 다시 불러오기)'],
+    ['⌘ F', '페이지에서 찾기'],
+    ['⌘ D', '지금 페이지를 북마크에 추가하기'],
+    ['⌥ ⌘ I', '개발자 도구 열기·닫기'],
+    ['⌘ [', '뒤로 가기'],
+    ['⌘ ]', '앞으로 가기'],
+    ['⌘ +', '화면 확대'],
+    ['⌘ −', '화면 축소'],
+    ['⌘ 0', '원래 크기로 되돌리기'],
+    ['⌘ ⇧ N', '시크릿 창 열기']
+  ];
+  var MAC_MANUAL = [
+    ['⌘ C', '복사하기'],
+    ['⌘ V', '붙여넣기'],
+    ['⌘ X', '잘라내기'],
+    ['⌘ Z', '실행 취소'],
+    ['⌘ ⇧ Z', '다시 실행'],
+    ['⌘ A', '전체 선택'],
+    ['⌘ S', '저장하기'],
+    ['⌘ W', '맨 앞의 창 닫기'],
+    ['⌘ Q', '앱 종료하기'],
+    ['⌘ Tab', '열려 있는 앱 사이에서 전환하기'],
+    ['⌘ Space', 'Spotlight 검색 열기'],
+    ['⌘ ⇧ 3', '화면 전체 캡처하기'],
+    ['⌘ ⇧ 4', '고른 영역만 캡처하기'],
+    ['⌘ ⇧ 5', '화면 캡처 도구 열기'],
+    ['⌥ ⌘ Esc', '응답 없는 앱 강제 종료하기'],
+    ['⌃ ⌘ Q', '화면 잠그기']
+  ];
+
+  /* =========================================================
+     키보드 배열 (Mac 노트북)
+     [code, 표시, 폭, 종류]
+     ========================================================= */
+  var KB_ROWS = [
+    { cls: 'fnrow', keys: [
+      ['Escape', 'esc', 1.5, 'small'],
+      ['F1', 'F1', 1, 'small'], ['F2', 'F2', 1, 'small'], ['F3', 'F3', 1, 'small'], ['F4', 'F4', 1, 'small'],
+      ['F5', 'F5', 1, 'small'], ['F6', 'F6', 1, 'small'], ['F7', 'F7', 1, 'small'], ['F8', 'F8', 1, 'small'],
+      ['F9', 'F9', 1, 'small'], ['F10', 'F10', 1, 'small'], ['F11', 'F11', 1, 'small'], ['F12', 'F12', 1, 'small'],
+      [null, '', 1, 'blank']
+    ]},
+    { keys: [
+      ['Backquote', '`', 1], ['Digit1', '1', 1], ['Digit2', '2', 1], ['Digit3', '3', 1], ['Digit4', '4', 1],
+      ['Digit5', '5', 1], ['Digit6', '6', 1], ['Digit7', '7', 1], ['Digit8', '8', 1], ['Digit9', '9', 1],
+      ['Digit0', '0', 1], ['Minus', '-', 1], ['Equal', '=', 1], ['Backspace', 'delete', 1.5, 'small']
+    ]},
+    { keys: [
+      ['Tab', 'tab', 1.5, 'small'],
+      ['KeyQ', 'Q', 1], ['KeyW', 'W', 1], ['KeyE', 'E', 1], ['KeyR', 'R', 1], ['KeyT', 'T', 1], ['KeyY', 'Y', 1],
+      ['KeyU', 'U', 1], ['KeyI', 'I', 1], ['KeyO', 'O', 1], ['KeyP', 'P', 1], ['BracketLeft', '[', 1],
+      ['BracketRight', ']', 1], ['Backslash', '\\', 1]
+    ]},
+    { keys: [
+      ['CapsLock', 'caps lock', 1.8, 'small'],
+      ['KeyA', 'A', 1], ['KeyS', 'S', 1], ['KeyD', 'D', 1], ['KeyF', 'F', 1], ['KeyG', 'G', 1], ['KeyH', 'H', 1],
+      ['KeyJ', 'J', 1], ['KeyK', 'K', 1], ['KeyL', 'L', 1], ['Semicolon', ';', 1], ['Quote', '\'', 1],
+      ['Enter', 'return', 1.7, 'small']
+    ]},
+    { keys: [
+      ['ShiftLeft', ['⇧', 'shift'], 2.35, 'mod'],
+      ['KeyZ', 'Z', 1], ['KeyX', 'X', 1], ['KeyC', 'C', 1], ['KeyV', 'V', 1], ['KeyB', 'B', 1], ['KeyN', 'N', 1],
+      ['KeyM', 'M', 1], ['Comma', ',', 1], ['Period', '.', 1], ['Slash', '/', 1],
+      ['ShiftRight', ['⇧', 'shift'], 2.15, 'mod']
+    ]},
+    { keys: [
+      [null, 'fn', 1, 'small'],
+      ['ControlLeft', ['⌃', 'control'], 1, 'mod'],
+      ['AltLeft', ['⌥', 'option'], 1, 'mod'],
+      ['MetaLeft', ['⌘', 'command'], 1.25, 'mod'],
+      ['Space', '', 5],
+      ['MetaRight', ['⌘', 'command'], 1.25, 'mod'],
+      ['AltRight', ['⌥', 'option'], 1, 'mod'],
+      'ARROWS'
+    ]}
+  ];
+
+  var MOD_CODES = {
+    MetaLeft: 'meta', MetaRight: 'meta',
+    AltLeft: 'alt', AltRight: 'alt',
+    ControlLeft: 'ctrl', ControlRight: 'ctrl',
+    ShiftLeft: 'shift', ShiftRight: 'shift'
+  };
+  var MOD_LEFT_CODE = { meta: 'MetaLeft', alt: 'AltLeft', ctrl: 'ControlLeft', shift: 'ShiftLeft' };
+  var MOD_SYMBOL = { meta: '⌘', alt: '⌥', ctrl: '⌃', shift: '⇧' };
+  var MOD_ORDER = ['meta', 'alt', 'ctrl', 'shift'];
+  var IGNORED_CODES = { CapsLock: true, Fn: true, FnLock: true };
+
+  var KEY_NAMES = {
+    Backquote: '`', Minus: '-', Equal: '=', Backspace: 'Delete', Tab: 'Tab',
+    BracketLeft: '[', BracketRight: ']', Backslash: '\\', Semicolon: ';', Quote: '\'',
+    Enter: 'Enter', Comma: ',', Period: '.', Slash: '/', Space: 'Space', Escape: 'Esc',
+    ArrowUp: '↑', ArrowDown: '↓', ArrowLeft: '←', ArrowRight: '→'
+  };
+  function keyName(code) {
+    if (KEY_NAMES[code]) return KEY_NAMES[code];
+    if (/^Key[A-Z]$/.test(code)) return code.slice(3);
+    if (/^Digit[0-9]$/.test(code)) return code.slice(5);
+    if (/^Numpad/.test(code)) return code.replace('Numpad', '');
+    return code;
+  }
+
+  /* =========================================================
+     도움 함수
+     ========================================================= */
+  function $(id) { return document.getElementById(id); }
+  function shuffle(arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function dateStr(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function dateTimeStr(d) { return dateStr(d) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+  function keysHtml(label) {
+    return '<span class="keys">' + label.split(' ').map(function (k) { return '<kbd>' + k + '</kbd>'; }).join('') + '</span>';
+  }
+  function findShortcut(mods, code) {
+    for (var i = 0; i < SHORTCUTS.length; i++) {
+      var s = SHORTCUTS[i];
+      if (s.code === code && s.mods.meta === mods.meta && s.mods.alt === mods.alt &&
+          s.mods.ctrl === mods.ctrl && s.mods.shift === mods.shift) return s;
+    }
+    return null;
+  }
+  // 누른 조합을 글자로: 연습 단축키와 같은 조합이면 표와 같은 순서로 적는다
+  function comboLabel(mods, mainCodes) {
+    if (mainCodes.length === 1) {
+      var s = findShortcut(mods, mainCodes[0]);
+      if (s) return s.label;
+    }
+    var parts = [];
+    MOD_ORDER.forEach(function (m) { if (mods[m]) parts.push(MOD_SYMBOL[m]); });
+    mainCodes.forEach(function (c) { parts.push(keyName(c)); });
+    return parts.join(' ');
+  }
+  function bindBtn(id, fn) {
+    var b = $(id);
+    if (!b) return;
+    b.addEventListener('click', function () { b.blur(); fn(); });
+  }
+
+  /* =========================================================
+     탭
+     ========================================================= */
+  var currentTab = 'practice';
+  var tabButtons = document.querySelectorAll('.tab');
+  function isPracticeTab() { return currentTab === 'practice' || currentTab === 'timeattack'; }
+
+  function selectTab(name) {
+    currentTab = name;
+    tabButtons.forEach(function (b) { b.setAttribute('aria-selected', b.dataset.tab === name ? 'true' : 'false'); });
+    ['practice', 'timeattack', 'vscode', 'browser', 'mac'].forEach(function (t) {
+      $('panel-' + t).hidden = (t !== name);
+    });
+    $('keyboardArea').hidden = !isPracticeTab();
+    clearPressed();
+    updateHint();
+  }
+  tabButtons.forEach(function (b) {
+    b.addEventListener('click', function () { b.blur(); selectTab(b.dataset.tab); });
+  });
+
+  /* =========================================================
+     키보드 그림
+     ========================================================= */
+  var keyEls = {};
+  function makeKey(def) {
+    var el = document.createElement('div');
+    var code = def[0], label = def[1], w = def[2], kind = def[3];
+    el.className = 'key' + (kind ? ' ' + kind : '');
+    el.style.setProperty('--w', w);
+    if (Array.isArray(label)) {
+      el.innerHTML = '<span class="sym">' + label[0] + '</span><span>' + label[1] + '</span>';
+    } else {
+      el.textContent = label;
+    }
+    if (code) {
+      el.dataset.code = code;
+      keyEls[code] = el;
+    }
+    return el;
+  }
+  function buildKeyboard() {
+    var kb = $('keyboard');
+    KB_ROWS.forEach(function (row) {
+      var r = document.createElement('div');
+      r.className = 'krow' + (row.cls ? ' ' + row.cls : '');
+      row.keys.forEach(function (def) {
+        if (def === 'ARROWS') {
+          var a = document.createElement('div');
+          a.className = 'arrows';
+          [['ArrowUp', '▲'], ['ArrowLeft', '◀'], ['ArrowDown', '▼'], ['ArrowRight', '▶']].forEach(function (k) {
+            a.appendChild(makeKey([k[0], k[1], 1]));
+          });
+          r.appendChild(a);
+        } else {
+          r.appendChild(makeKey(def));
+        }
+      });
+      kb.appendChild(r);
+    });
+  }
+
+  /* =========================================================
+     누른 키 추적
+     ========================================================= */
+  var pressed = [];   // 누른 순서대로 code 목록
+
+  function addPressed(code) { if (pressed.indexOf(code) < 0) pressed.push(code); }
+  function removePressed(code) { var i = pressed.indexOf(code); if (i >= 0) pressed.splice(i, 1); }
+  function clearPressed() { pressed = []; renderPressed(); }
+
+  // 이벤트에 실린 수정키 상태와 맞춘다 (놓친 keyup 정리)
+  function syncMods(e) {
+    var flags = { meta: e.metaKey, alt: e.altKey, ctrl: e.ctrlKey, shift: e.shiftKey };
+    pressed = pressed.filter(function (c) {
+      var m = MOD_CODES[c];
+      return !m || flags[m];
+    });
+  }
+
+  function renderPressed() {
+    Object.keys(keyEls).forEach(function (c) {
+      keyEls[c].classList.toggle('lit', pressed.indexOf(c) >= 0);
+    });
+    var mods = { meta: false, alt: false, ctrl: false, shift: false };
+    var mains = [];
+    pressed.forEach(function (c) {
+      if (MOD_CODES[c]) mods[MOD_CODES[c]] = true;
+      else mains.push(c);
+    });
+    var combo = $('combo');
+    if (pressed.length === 0) {
+      combo.textContent = '키를 눌러 보세요';
+      combo.classList.add('empty');
+    } else {
+      combo.textContent = comboLabel(mods, mains);
+      combo.classList.remove('empty');
+    }
+  }
+
+  // 정답 보기: 금색 테두리
+  function updateHint() {
+    Object.keys(keyEls).forEach(function (c) { keyEls[c].classList.remove('hint'); });
+    if (currentTab !== 'practice' || P.done) return;
+    var q = SHORTCUTS[P.order[P.idx]];
+    if (!q || !P.revealed[q.id]) return;
+    MOD_ORDER.forEach(function (m) { if (q.mods[m]) keyEls[MOD_LEFT_CODE[m]].classList.add('hint'); });
+    if (keyEls[q.code]) keyEls[q.code].classList.add('hint');
+  }
+
+  var NARROW_QUERY = window.matchMedia('(max-width: 720px), (hover: none) and (pointer: coarse)');
+
+  window.addEventListener('keydown', function (e) {
+    if (NARROW_QUERY.matches || !isPracticeTab()) return;
+    e.preventDefault();
+    e.stopPropagation();
+    var code = e.code;
+    if (!code || IGNORED_CODES[code]) return;
+    syncMods(e);
+    addPressed(code);
+    renderPressed();
+    if (MOD_CODES[code] || e.repeat) return;
+    var mods = { meta: e.metaKey, alt: e.altKey, ctrl: e.ctrlKey, shift: e.shiftKey };
+    if (currentTab === 'practice') practiceAttempt(mods, code);
+    else taAttempt(mods, code);
+  }, true);
+
+  window.addEventListener('keyup', function (e) {
+    if (NARROW_QUERY.matches || !isPracticeTab()) return;
+    e.preventDefault();
+    e.stopPropagation();
+    removePressed(e.code);
+    // ⌘를 누르고 있는 동안 Mac은 다른 키의 keyup을 보내지 않으므로 ⌘를 뗄 때 함께 정리
+    if (e.code === 'MetaLeft' || e.code === 'MetaRight') {
+      pressed = pressed.filter(function (c) { return MOD_CODES[c]; });
+    }
+    syncMods(e);
+    renderPressed();
+  }, true);
+
+  window.addEventListener('blur', clearPressed);
+  document.addEventListener('visibilitychange', clearPressed);
+
+  /* =========================================================
+     연습 모드
+     ========================================================= */
+  var P = {};
+  var lastOrderKey = '';
+
+  function startPractice() {
+    var order, key;
+    do {
+      order = shuffle(SHORTCUTS.map(function (_, i) { return i; }));
+      key = order.join(',');
+    } while (key === lastOrderKey);
+    lastOrderKey = key;
+    P = {
+      order: order, idx: 0, firstOk: 0, wrongTotal: 0,
+      wrongOnce: {}, revealed: {}, locked: false, done: false,
+      state: '', feedback: '이 기능의 단축키를 눌러 보세요.', finishedAt: null
+    };
+    renderPractice();
+  }
+
+  function retryList() {
+    return P.order.map(function (i) { return SHORTCUTS[i]; })
+      .filter(function (s) { return P.wrongOnce[s.id] || P.revealed[s.id]; });
+  }
+
+  function renderPractice() {
+    var panel = $('panel-practice');
+    if (P.done) {
+      var pct = Math.round(P.firstOk / SHORTCUTS.length * 100);
+      var list = retryList();
+      panel.innerHTML =
+        '<div class="result">' +
+          '<h2>연습 결과</h2>' +
+          '<div class="score">첫 시도 정답 ' + P.firstOk + ' / ' + SHORTCUTS.length + '개 (' + pct + '%)</div>' +
+          '<div class="sub">틀린 횟수 ' + P.wrongTotal + '번</div>' +
+          '<div class="retry"><h3>다시 연습할 단축키</h3>' +
+            (list.length
+              ? '<ul>' + list.map(function (s) { return '<li><span>' + s.name + '</span>' + keysHtml(s.label) + '</li>'; }).join('') + '</ul>'
+              : '<div class="none">다시 연습할 단축키가 없어요.</div>') +
+          '</div>' +
+          '<div class="actions">' +
+            '<button class="btn" id="pSave">결과 이미지 저장</button>' +
+            '<button class="btn primary" id="pRestart">다시 연습하기</button>' +
+          '</div>' +
+        '</div>';
+      bindBtn('pSave', function () { saveResultImage('practice'); });
+      bindBtn('pRestart', startPractice);
+      updateHint();
+      return;
+    }
+    var q = SHORTCUTS[P.order[P.idx]];
+    var n = P.idx + 1;
+    panel.innerHTML =
+      '<div class="progress-row">' +
+        '<span class="count">' + n + ' / ' + SHORTCUTS.length + '</span>' +
+        '<div class="bar"><i style="width:' + (n / SHORTCUTS.length * 100) + '%"></i></div>' +
+      '</div>' +
+      '<div class="qcard ' + P.state + '">' +
+        '<div class="qname">' + q.name + '</div>' +
+        '<div class="qdesc">' + q.desc + '</div>' +
+        '<div class="qfeedback">' + P.feedback + '</div>' +
+      '</div>' +
+      '<div class="actions">' +
+        '<button class="btn" id="pReveal"' + (P.revealed[q.id] || P.locked ? ' disabled' : '') + '>정답 보기</button>' +
+      '</div>';
+    bindBtn('pReveal', function () {
+      if (P.locked) return;
+      P.revealed[q.id] = true;
+      renderPractice();
+    });
+    updateHint();
+  }
+
+  function practiceAttempt(mods, code) {
+    if (P.done || P.locked) return;
+    var q = SHORTCUTS[P.order[P.idx]];
+    var ok = q.code === code && q.mods.meta === mods.meta && q.mods.alt === mods.alt &&
+             q.mods.ctrl === mods.ctrl && q.mods.shift === mods.shift;
+    if (ok) {
+      if (!P.wrongOnce[q.id] && !P.revealed[q.id]) P.firstOk++;
+      P.state = 'ok';
+      P.feedback = '맞았어요! ' + q.label;
+      P.locked = true;
+      renderPractice();
+      setTimeout(function () {
+        P.locked = false;
+        P.state = '';
+        P.feedback = '이 기능의 단축키를 눌러 보세요.';
+        if (P.idx + 1 >= SHORTCUTS.length) {
+          P.done = true;
+          P.finishedAt = new Date();
+        } else {
+          P.idx++;
+        }
+        renderPractice();
+      }, 900);
+    } else {
+      P.wrongOnce[q.id] = true;
+      P.wrongTotal++;
+      P.state = 'bad';
+      P.feedback = '지금 누른 키: ' + comboLabel(mods, [code]) + '. 다시 눌러 보세요.';
+      renderPractice();
+    }
+  }
+
+  /* =========================================================
+     타임어택
+     ========================================================= */
+  var TA_SECONDS = 60;
+  var T = { status: 'idle' };
+
+  function taPick() {
+    var i;
+    do { i = Math.floor(Math.random() * SHORTCUTS.length); } while (i === T.current);
+    T.current = i;
+  }
+
+  function startTA() {
+    if (T.timer) clearInterval(T.timer);
+    T = {
+      status: 'running', current: -1, correct: 0, wrong: 0, skip: 0,
+      endAt: Date.now() + TA_SECONDS * 1000, timer: null,
+      state: '', feedback: '이 기능의 단축키를 눌러 보세요.', finishedAt: null
+    };
+    taPick();
+    renderTA();
+    T.timer = setInterval(tickTA, 100);
+  }
+
+  function tickTA() {
+    if (T.status !== 'running') return;
+    var left = T.endAt - Date.now();
+    if (left <= 0) {
+      clearInterval(T.timer);
+      T.timer = null;
+      T.status = 'done';
+      T.finishedAt = new Date();
+      renderTA();
+      return;
+    }
+    var sec = $('taSec'), bar = $('taBar');
+    if (sec) sec.textContent = Math.ceil(left / 1000);
+    if (bar) bar.style.width = (left / (TA_SECONDS * 1000) * 100) + '%';
+  }
+
+  function renderTA() {
+    var panel = $('panel-timeattack');
+    if (T.status === 'idle') {
+      panel.innerHTML =
+        '<div class="intro">' +
+          '<p>60초 동안 연습 단축키 15개 중에서 무작위로 문제가 나옵니다.</p>' +
+          '<p>맞히면 바로 다음 문제로, 틀리면 같은 문제가 그대로 남습니다.</p>' +
+          '<div class="actions"><button class="btn primary" id="taStart">시작</button></div>' +
+        '</div>';
+      bindBtn('taStart', startTA);
+      return;
+    }
+    if (T.status === 'done') {
+      panel.innerHTML =
+        '<div class="result">' +
+          '<h2>타임어택 결과</h2>' +
+          '<div class="score">맞힘 ' + T.correct + ' · 틀림 ' + T.wrong + ' · 건너뜀 ' + T.skip + '</div>' +
+          '<div class="actions">' +
+            '<button class="btn" id="taSave">결과 이미지 저장</button>' +
+            '<button class="btn primary" id="taRestart">다시 하기</button>' +
+          '</div>' +
+        '</div>';
+      bindBtn('taSave', function () { saveResultImage('timeattack'); });
+      bindBtn('taRestart', startTA);
+      return;
+    }
+    var left = Math.max(0, T.endAt - Date.now());
+    var q = SHORTCUTS[T.current];
+    panel.innerHTML =
+      '<div class="ta-top">' +
+        '<span class="ta-time"><span id="taSec">' + Math.ceil(left / 1000) + '</span><small>초</small></span>' +
+        '<div class="bar time"><i id="taBar" style="width:' + (left / (TA_SECONDS * 1000) * 100) + '%"></i></div>' +
+      '</div>' +
+      '<div class="qcard ' + T.state + '">' +
+        '<div class="qname">' + q.name + '</div>' +
+        '<div class="qdesc">' + q.desc + '</div>' +
+        '<div class="qfeedback">' + T.feedback + '</div>' +
+      '</div>' +
+      '<div class="ta-stats">' +
+        '<span>맞힘 <b>' + T.correct + '</b></span>' +
+        '<span>틀림 <b>' + T.wrong + '</b></span>' +
+        '<span>건너뜀 <b>' + T.skip + '</b></span>' +
+      '</div>' +
+      '<div class="actions"><button class="btn" id="taSkip">건너뛰기</button></div>';
+    bindBtn('taSkip', function () {
+      if (T.status !== 'running') return;
+      T.skip++;
+      T.state = '';
+      T.feedback = '이 기능의 단축키를 눌러 보세요.';
+      taPick();
+      renderTA();
+    });
+  }
+
+  function taAttempt(mods, code) {
+    if (T.status !== 'running' || Date.now() >= T.endAt) return;
+    var q = SHORTCUTS[T.current];
+    var ok = q.code === code && q.mods.meta === mods.meta && q.mods.alt === mods.alt &&
+             q.mods.ctrl === mods.ctrl && q.mods.shift === mods.shift;
+    if (ok) {
+      T.correct++;
+      T.state = '';
+      T.feedback = '맞았어요! ' + q.label;
+      taPick();
+    } else {
+      T.wrong++;
+      T.state = 'bad';
+      T.feedback = '지금 누른 키: ' + comboLabel(mods, [code]) + '. 다시 눌러 보세요.';
+    }
+    renderTA();
+  }
+
+  /* =========================================================
+     결과 이미지 저장
+     ========================================================= */
+  var FONT = '-apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif';
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  function saveResultImage(mode) {
+    var isPractice = mode === 'practice';
+    var modeName = isPractice ? '연습 모드' : '타임어택';
+    var when = isPractice ? P.finishedAt : T.finishedAt;
+    if (!when) return;
+    var list = isPractice ? retryList() : [];
+
+    var W = 640, pad = 40;
+    var H = isPractice ? 258 + Math.max(list.length, 1) * 34 + 50 : 230;
+    var scale = 2;
+    var canvas = document.createElement('canvas');
+    canvas.width = W * scale;
+    canvas.height = H * scale;
+    var ctx = canvas.getContext('2d');
+    ctx.scale(scale, scale);
+
+    ctx.fillStyle = '#f4f5f7';
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#ffffff';
+    roundRect(ctx, 16, 16, W - 32, H - 32, 18);
+    ctx.fill();
+    ctx.strokeStyle = '#e2e5ea';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.textBaseline = 'alphabetic';
+    var y = 16 + pad + 6;
+    ctx.fillStyle = '#6b7280';
+    ctx.font = '600 15px ' + FONT;
+    ctx.fillText('Mac 단축키 연습장', pad, y);
+
+    y += 36;
+    ctx.fillStyle = '#1d1f23';
+    ctx.font = '700 26px ' + FONT;
+    ctx.fillText(modeName, pad, y);
+
+    y += 26;
+    ctx.fillStyle = '#6b7280';
+    ctx.font = '500 15px ' + FONT;
+    ctx.fillText(dateTimeStr(when), pad, y);
+
+    y += 50;
+    ctx.fillStyle = '#1d1f23';
+    ctx.font = '800 28px ' + FONT;
+    if (isPractice) {
+      var pct = Math.round(P.firstOk / SHORTCUTS.length * 100);
+      ctx.fillText('첫 시도 정답 ' + P.firstOk + ' / ' + SHORTCUTS.length + '개 (' + pct + '%)', pad, y);
+      y += 30;
+      ctx.fillStyle = '#6b7280';
+      ctx.font = '500 16px ' + FONT;
+      ctx.fillText('틀린 횟수 ' + P.wrongTotal + '번', pad, y);
+
+      y += 44;
+      ctx.fillStyle = '#6b7280';
+      ctx.font = '600 14px ' + FONT;
+      ctx.fillText('다시 연습할 단축키', pad, y);
+      y += 10;
+      ctx.strokeStyle = '#e2e5ea';
+      ctx.beginPath(); ctx.moveTo(pad, y); ctx.lineTo(W - pad, y); ctx.stroke();
+      if (list.length === 0) {
+        y += 24;
+        ctx.fillStyle = '#6b7280';
+        ctx.font = '500 15px ' + FONT;
+        ctx.fillText('다시 연습할 단축키가 없어요.', pad, y);
+      } else {
+        list.forEach(function (s) {
+          y += 24;
+          ctx.fillStyle = '#1d1f23';
+          ctx.font = '500 15px ' + FONT;
+          ctx.textAlign = 'left';
+          ctx.fillText(s.name, pad, y);
+          ctx.font = '700 15px ' + FONT;
+          ctx.textAlign = 'right';
+          ctx.fillText(s.label, W - pad, y);
+          ctx.textAlign = 'left';
+          y += 10;
+          ctx.strokeStyle = '#eef0f3';
+          ctx.beginPath(); ctx.moveTo(pad, y); ctx.lineTo(W - pad, y); ctx.stroke();
+        });
+      }
+    } else {
+      ctx.fillText('맞힘 ' + T.correct + ' · 틀림 ' + T.wrong + ' · 건너뜀 ' + T.skip, pad, y);
+    }
+
+    var fileName = '단축키연습_' + (isPractice ? '연습모드' : '타임어택') + '_' + dateStr(when) + '.png';
+    canvas.toBlob(function (blob) {
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+    }, 'image/png');
+  }
+
+  /* =========================================================
+     설명서 탭
+     ========================================================= */
+  function manualTable(rows) {
+    return '<table class="manual"><thead><tr><th>키</th><th>하는 일</th></tr></thead><tbody>' +
+      rows.map(function (r) { return '<tr><td>' + keysHtml(r[0]) + '</td><td>' + r[1] + '</td></tr>'; }).join('') +
+      '</tbody></table>';
+  }
+  function buildManuals() {
+    $('panel-vscode').innerHTML =
+      '<p class="manual-note">연습 모드와 타임어택에 나오는 VS Code 단축키 15개입니다.</p>' +
+      manualTable(SHORTCUTS.map(function (s) { return [s.label, s.name]; }));
+    $('panel-browser').innerHTML =
+      '<p class="manual-note">크롬 기준 단축키입니다. 읽기 전용이며 연습 문제로는 나오지 않습니다.</p>' +
+      manualTable(BROWSER_MANUAL);
+    $('panel-mac').innerHTML =
+      '<p class="manual-note">Mac 기본 단축키입니다. 읽기 전용이며 연습 문제로는 나오지 않습니다.</p>' +
+      manualTable(MAC_MANUAL);
+  }
+
+  /* =========================================================
+     시작
+     ========================================================= */
+  buildKeyboard();
+  buildManuals();
+  startPractice();
+  renderTA();
+  selectTab('practice');
+})();
+</script>
+</body>
+</html>
